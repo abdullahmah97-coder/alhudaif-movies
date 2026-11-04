@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>الحضيف موفيز</title>
+<meta name="description" content="اكتب اسم الفيلم أو المسلسل، ونقول لك وين ينعرض في السعودية.">
+<meta name="theme-color" content="#0f1116">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Reem+Kufi:wght@500;700&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f1116'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23e9b44c' stroke-width='5'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23e9b44c'/%3E%3C/svg%3E">
+<style>
+/* Layout: one column "marquee" — wordmark + big search on top, poster grid below, detail and settings as full-screen sheets. Built for a TV remote (arrow keys) and a phone. */
+:root{
+  --ink:#0f1116;        /* page */
+  --panel:#171a21;      /* cards, sheets */
+  --panel-2:#20242d;    /* raised / focus fill */
+  --line:#2c313c;       /* hairlines */
+  --text:#ece7dc;       /* warm off-white */
+  --muted:#9a9488;      /* secondary text */
+  --gold:#e9b44c;       /* marquee bulb accent */
+  --gold-ink:#1b1406;   /* text on gold */
+  --ok:#6fcf97;         /* "in your subscription" */
+  --warn:#e8806a;
+  --display:"Reem Kufi","IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif;
+  --body:"IBM Plex Sans Arabic","Segoe UI",Tahoma,Arial,sans-serif;
+  --r:14px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--ink);color:var(--text);font-family:var(--body);
+  font-size:clamp(15px,1.05vw + 8px,22px);line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:max(20px,env(safe-area-inset-top,0px)) max(28px,env(safe-area-inset-bottom,0px));
+  -webkit-font-smoothing:antialiased;
+}
+[hidden]{display:none!important}
+img{max-width:100%;display:block}
+button,input{font:inherit;color:inherit}
+.wrap{max-width:1600px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(18px,2.2vw,36px)}
+.wrap>*{min-width:0}
+
+/* Header */
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px}
+.reel{width:clamp(40px,3.2vw,60px);aspect-ratio:1;flex:none}
+.brand h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,2.6vw,48px);line-height:1.1;margin:0;letter-spacing:0}
+.brand small{display:block;font-family:var(--body);font-size:.62em;letter-spacing:.32em;color:var(--gold);font-weight:600;direction:ltr;text-align:right}
+.ghost{background:transparent;border:1px solid var(--line);border-radius:999px;padding:.45em 1.1em;cursor:pointer;color:var(--muted)}
+.ghost:hover{color:var(--text);border-color:var(--muted)}
+
+/* Search */
+.search{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.search label{font-family:var(--display);font-size:clamp(20px,1.8vw,34px);font-weight:500}
+.bar{display:flex;gap:10px;align-items:stretch}
+.bar input{
+  flex:1;min-width:0;width:0;background:var(--panel);border:2px solid var(--line);border-radius:var(--r);
+  padding:.7em 1em;font-size:1.25em;outline:none;
+}
+.bar input::placeholder{color:#6c675e}
+.bar button{background:var(--gold);color:var(--gold-ink);border:0;border-radius:var(--r);padding:0 1.4em;font-weight:600;font-size:1.1em;cursor:pointer}
+.hint{color:var(--muted);font-size:.9em;margin:0}
+
+/* Filters + status */
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.status{margin:0;color:var(--muted)}
+.status b{color:var(--text);font-weight:600}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:.35em 1em;cursor:pointer;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--text);color:var(--ink);border-color:var(--text);font-weight:600}
+
+/* Grid of titles */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(150px,13vw,240px),1fr));gap:clamp(14px,1.4vw,26px)}
+.card{
+  all:unset;cursor:pointer;display:grid;grid-template-rows:auto 1fr;background:var(--panel);
+  border-radius:var(--r);overflow:hidden;border:2px solid transparent;min-width:0;
+  transition:transform .15s ease,border-color .15s ease,background .15s ease;
+}
+.card:hover{border-color:var(--line)}
+.poster{aspect-ratio:2/3;background:var(--panel-2);position:relative;overflow:hidden}
+.poster img{width:100%;height:100%;object-fit:cover}
+.poster .ph{position:absolute;inset:0;display:grid;place-items:center;padding:12px;text-align:center;font-family:var(--display);font-size:1.15em;color:var(--muted)}
+.tag{position:absolute;top:8px;inset-inline-start:8px;background:rgba(15,17,22,.82);border-radius:6px;padding:.05em .55em;font-size:.72em;color:var(--text)}
+.mine{position:absolute;bottom:8px;inset-inline-start:8px;background:var(--ok);color:#06210f;border-radius:6px;padding:.05em .55em;font-size:.72em;font-weight:600}
+.meta{padding:12px 12px 14px;display:grid;gap:6px;align-content:start;min-width:0}
+.meta h3{margin:0;font-size:1em;font-weight:600;line-height:1.35;overflow-wrap:anywhere}
+.meta .sub{margin:0;color:var(--muted);font-size:.78em;line-height:1.4;overflow-wrap:anywhere}
+.meta h3,.meta .sub,.detail h2{text-align:right}
+.logos{display:flex;flex-wrap:wrap;gap:6px;min-height:30px;align-items:center}
+.logos img{width:30px;height:30px;border-radius:7px;background:var(--panel-2)}
+.logos .none{font-size:.75em;color:var(--muted)}
+.logos .more{font-size:.75em;color:var(--muted)}
+.shimmer{width:96px;height:30px;border-radius:7px;background:linear-gradient(90deg,var(--panel-2),#2a2f3a,var(--panel-2));background-size:200% 100%;animation:sh 1.2s linear infinite}
+@keyframes sh{to{background-position:-200% 0}}
+
+/* Focus — the remote's cursor */
+:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.card:focus{outline:none;border-color:var(--gold);transform:scale(1.04);background:var(--panel-2);box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.bar input:focus{border-color:var(--gold)}
+
+/* Sheets (detail + settings) */
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(8,9,12,.86);display:grid;place-items:center;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.sheet-body{background:var(--panel);border:1px solid var(--line);border-radius:20px;width:min(1100px,100%);max-height:100%;overflow:auto;padding:clamp(18px,2.4vw,40px);display:grid;gap:20px}
+.detail{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:clamp(18px,2.4vw,40px);align-items:start}
+.detail .poster{border-radius:12px}
+.detail h2{font-family:var(--display);font-weight:700;font-size:clamp(24px,2.2vw,42px);line-height:1.2;margin:0;text-wrap:balance}
+.detail .sub{color:var(--muted);margin:4px 0 0}
+.overview{margin:0;max-width:65ch;color:#d6d0c4}
+.groups{display:grid;gap:16px}
+.group h4{margin:0 0 8px;font-size:.8em;letter-spacing:.04em;color:var(--gold);font-weight:600}
+.provs{display:flex;flex-wrap:wrap;gap:10px}
+.prov{display:flex;align-items:center;gap:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:6px 12px 6px 8px}
+.prov img{width:40px;height:40px;border-radius:9px}
+.prov span{font-weight:500}
+.prov.is-mine{border-color:var(--ok)}
+.prov.is-mine em{font-style:normal;font-size:.75em;color:var(--ok)}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.primary{white-space:normal;text-align:center;display:inline-flex;align-items:center;gap:8px;background:var(--gold);color:var(--gold-ink);border:0;border-radius:12px;padding:.7em 1.3em;font-weight:600;text-decoration:none;cursor:pointer}
+.secondary{display:inline-flex;align-items:center;background:transparent;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:.7em 1.3em;cursor:pointer;text-decoration:none}
+.notice{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:0;color:var(--muted)}
+
+/* Settings */
+.settings h2{font-family:var(--display);margin:0;font-size:clamp(22px,2vw,36px)}
+.steps{margin:0;padding-inline-start:1.3em;display:grid;gap:6px;color:#d6d0c4}
+.steps code,.mono{font-family:ui-monospace,Consolas,monospace;direction:ltr;unicode-bidi:isolate;background:var(--panel-2);padding:.05em .4em;border-radius:5px;font-size:.9em}
+.keyrow{display:flex;gap:10px;flex-wrap:wrap}
+.keyrow input{flex:1 1 220px;min-width:0;width:0;background:var(--ink);border:2px solid var(--line);border-radius:12px;padding:.6em .9em;direction:ltr;text-align:left;outline:none}
+.keyrow input:focus{border-color:var(--gold)}
+.msg{margin:0;font-size:.9em}
+.msg.ok{color:var(--ok)} .msg.err{color:var(--warn)}
+.subs{display:flex;flex-wrap:wrap;gap:10px}
+.sub-chip{display:flex;align-items:center;gap:8px;background:var(--panel-2);border:2px solid var(--line);border-radius:12px;padding:5px 12px 5px 6px;cursor:pointer}
+.sub-chip img{width:32px;height:32px;border-radius:8px}
+.sub-chip[aria-pressed="true"]{border-color:var(--ok);background:#1d2a22}
+.sub-chip[aria-pressed="true"]::after{content:"✓";color:var(--ok);font-weight:700}
+
+/* Onboarding (no key yet) */
+.welcome{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:clamp(18px,2.4vw,40px);display:grid;gap:14px;max-width:900px}
+.welcome h2{font-family:var(--display);margin:0;font-size:clamp(22px,2vw,36px)}
+.welcome p{margin:0;color:#d6d0c4;max-width:65ch}
+
+footer{color:var(--muted);font-size:.78em;display:flex;flex-wrap:wrap;gap:6px 18px;border-top:1px solid var(--line);padding-top:16px}
+footer a{color:var(--muted)}
+
+@media (max-width:640px){
+  .detail{grid-template-columns:1fr}
+  .detail .poster{max-width:200px}
+  .bar button{padding:0 1em}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .card:focus{transform:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <svg class="reel" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="27" fill="none" stroke="#e9b44c" stroke-width="4"/>
+        <circle cx="32" cy="32" r="5" fill="#e9b44c"/>
+        <circle cx="32" cy="16" r="6" fill="#e9b44c" opacity=".85"/>
+        <circle cx="32" cy="48" r="6" fill="#e9b44c" opacity=".85"/>
+        <circle cx="16" cy="32" r="6" fill="#e9b44c" opacity=".85"/>
+        <circle cx="48" cy="32" r="6" fill="#e9b44c" opacity=".85"/>
+      </svg>
+      <h1>الحضيف موفيز<small>ALHUDAIF MOVIES</small></h1>
+    </div>
+    <button class="ghost" id="openSettings" data-nav type="button">الإعدادات</button>
+  </header>
+
+  <form class="search" id="searchForm" role="search" autocomplete="off">
+    <label for="q">وين ينعرض؟</label>
+    <div class="bar">
+      <input id="q" name="q" type="search" data-nav placeholder="اكتب اسم الفيلم أو المسلسل… مثل: Dune أو العاصوف" enterkeyhint="search">
+      <button type="submit" data-nav>ابحث</button>
+    </div>
+    <p class="hint">النتائج حسب السعودية: اشتراك، مجاني، إيجار، أو شراء.</p>
+  </form>
+
+  <section class="welcome" id="welcome" hidden>
+    <h2>خطوة وحدة قبل أول بحث</h2>
+    <p>المنصة تجيب بيانات «وين ينعرض» من TMDB (ومصدرها JustWatch). تحتاج مفتاح مجاني من TMDB، تحطه مرة وحدة في الإعدادات ويبقى محفوظ في هالجهاز بس.</p>
+    <div class="actions"><button class="primary" id="welcomeSettings" data-nav type="button">افتح الإعدادات وحط المفتاح</button></div>
+  </section>
+
+  <section id="results" aria-live="polite">
+    <div class="toolbar">
+      <p class="status" id="status"></p>
+      <div class="chips" id="filters" role="group" aria-label="فلترة النتائج">
+        <button class="chip" type="button" data-nav data-filter="all" aria-pressed="true">الكل</button>
+        <button class="chip" type="button" data-nav data-filter="stream" aria-pressed="false">متاح بالاشتراك</button>
+        <button class="chip" type="button" data-nav data-filter="mine" aria-pressed="false">في اشتراكاتي</button>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <footer>
+    <span>يستخدم هذا المنتج واجهة TMDB، وهو غير معتمد من TMDB.</span>
+    <span>بيانات أماكن العرض مقدّمة من JustWatch.</span>
+    <a href="https://www.themoviedb.org" target="_blank" rel="noopener">themoviedb.org</a>
+  </footer>
+</div>
+
+<!-- Detail sheet -->
+<div class="sheet" id="detailSheet" hidden role="dialog" aria-modal="true" aria-labelledby="dTitle">
+  <div class="sheet-body" id="detailBody"></div>
+</div>
+
+<!-- Settings sheet -->
+<div class="sheet" id="settingsSheet" hidden role="dialog" aria-modal="true" aria-labelledby="sTitle">
+  <div class="sheet-body settings">
+    <h2 id="sTitle">الإعدادات</h2>
+    <div>
+      <h4 class="group-title" style="margin:0 0 8px;color:var(--gold)">مفتاح TMDB</h4>
+      <ol class="steps">
+        <li>سجّل حساب مجاني في <span class="mono">themoviedb.org</span>.</li>
+        <li>من الإعدادات افتح <span class="mono">API</span> واطلب مفتاح للاستخدام الشخصي.</li>
+        <li>انسخ <span class="mono">API Key</span> (٣٢ حرف) أو <span class="mono">API Read Access Token</span> والصقه هنا.</li>
+      </ol>
+    </div>
+    <div class="keyrow">
+      <input id="keyInput" type="password" data-nav placeholder="الصق المفتاح هنا" aria-label="مفتاح TMDB" spellcheck="false" autocapitalize="off">
+      <button class="primary" id="saveKey" data-nav type="button">احفظ وجرّب</button>
+      <button class="secondary" id="clearKey" data-nav type="button">امسح</button>
+    </div>
+    <p class="msg" id="keyMsg" role="status"></p>
+    <p class="notice">المفتاح ينحفظ في متصفح هالجهاز فقط، وما ينرسل لأي مكان غير TMDB.</p>
+    <div>
+      <h4 style="margin:0 0 4px;color:var(--gold)">اشتراكاتي</h4>
+      <p class="hint" style="margin:0 0 10px">اختر المنصات اللي مشترك فيها، ونعلّم لك الأفلام اللي تقدر تشوفها الحين بدون دفع زيادة.</p>
+      <div class="subs" id="subs"><p class="hint" style="margin:0">حط المفتاح أول عشان تطلع قائمة المنصات في السعودية.</p></div>
+    </div>
+    <div class="actions"><button class="secondary" id="closeSettings" data-nav type="button">رجوع</button></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const API = "https://api.themoviedb.org/3";
+  const IMG = "https://image.tmdb.org/t/p/";
+  const REGION = "SA";
+  const LANG = "ar-SA";
+
+  /* ---------- storage (per device) ---------- */
+  const store = {
+    get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } },
+    set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+    del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+  };
+  let apiKey = store.get("ahm_key", "");
+  let mySubs = new Set(store.get("ahm_subs", []));
+  let filter = "all";
+  let items = [];            // current list of titles
+  const provCache = new Map(); // "movie:123" -> SA providers object | null
+  let searchSeq = 0;
+
+  const $ = s => document.querySelector(s);
+  const grid = $("#grid"), statusEl = $("#status"), q = $("#q");
+
+  /* ---------- TMDB ---------- */
+  async function tmdb(path, params){
+    if(!apiKey) throw {code:"nokey"};
+    const url = new URL(API + path);
+    Object.entries(params || {}).forEach(([k,v]) => url.searchParams.set(k, v));
+    const headers = {accept:"application/json"};
+    if(apiKey.length > 40) headers.Authorization = "Bearer " + apiKey;
+    else url.searchParams.set("api_key", apiKey);
+    let res;
+    try{ res = await fetch(url.toString(), {headers}); }
+    catch(e){ throw {code:"net"}; }
+    if(res.status === 401) throw {code:"auth"};
+    if(res.status === 429) throw {code:"rate"};
+    if(!res.ok) throw {code:"http", status:res.status};
+    return res.json();
+  }
+  function errText(e){
+    switch(e && e.code){
+      case "nokey": return "ما فيه مفتاح TMDB. افتح الإعدادات وحطه.";
+      case "auth":  return "المفتاح مرفوض. تأكد إنك نسخته كامل من صفحة API في TMDB.";
+      case "net":   return "ما قدرنا نوصل لـ TMDB. تأكد من الإنترنت وجرّب مرة ثانية.";
+      case "rate":  return "طلبات كثيرة ورا بعض. انتظر ثواني وجرّب.";
+      default:      return "صار خطأ من TMDB" + (e && e.status ? " (" + e.status + ")" : "") + ". جرّب بعد شوي.";
+    }
+  }
+
+  async function providersFor(it){
+    const k = it.type + ":" + it.id;
+    if(provCache.has(k)) return provCache.get(k);
+    const p = tmdb("/" + it.type + "/" + it.id + "/watch/providers")
+      .then(d => (d && d.results && d.results[REGION]) || null)
+      .catch(e => { provCache.delete(k); throw e; });
+    provCache.set(k, p);
+    return p;
+  }
+
+  /* ---------- data shaping ---------- */
+  function shape(r){
+    const type = r.media_type || (r.first_air_date !== undefined ? "tv" : "movie");
+    if(type !== "movie" && type !== "tv") return null;
+    const title = type === "movie" ? r.title : r.name;
+    const orig = type === "movie" ? r.original_title : r.original_name;
+    const date = (type === "movie" ? r.release_date : r.first_air_date) || "";
+    return {
+      id:r.id, type, title: title || orig || "بدون عنوان", orig: orig || "",
+      year: date.slice(0,4), poster: r.poster_path || "", overview: r.overview || "",
+      pop: r.popularity || 0
+    };
+  }
+  const typeLabel = t => t === "tv" ? "مسلسل" : "فيلم";
+  const streamList = sa => sa ? [].concat(sa.flatrate || [], sa.free || [], sa.ads || []) : [];
+  const allProviders = sa => {
+    if(!sa) return [];
+    const seen = new Set(), out = [];
+    ["flatrate","free","ads","rent","buy"].forEach(g => (sa[g]||[]).forEach(p => { if(!seen.has(p.provider_id)){ seen.add(p.provider_id); out.push(p); } }));
+    return out;
+  };
+  const isMine = sa => streamList(sa).some(p => mySubs.has(p.provider_id));
+
+  /* ---------- rendering ---------- */
+  function el(tag, attrs, kids){
+    const n = document.createElement(tag);
+    if(attrs) for(const [k,v] of Object.entries(attrs)){
+      if(k === "class") n.className = v;
+      else if(k === "text") n.textContent = v;
+      else if(v !== false && v !== null && v !== undefined) n.setAttribute(k, v === true ? "" : v);
+    }
+    (kids || []).forEach(c => c && n.appendChild(typeof c === "string" ? document.createTextNode(c) : c));
+    return n;
+  }
+  function posterEl(it, size){
+    const box = el("div", {class:"poster"});
+    if(it.poster){
+      const img = el("img", {src: IMG + (size || "w342") + it.poster, alt:"", loading:"lazy"});
+      img.onerror = () => { img.remove(); box.prepend(el("div", {class:"ph", text: it.title})); };
+      box.appendChild(img);
+    } else box.appendChild(el("div", {class:"ph", text: it.title}));
+    return box;
+  }
+  function subLine(it){
+    const bits = [];
+    if(it.orig && it.orig !== it.title) bits.push(it.orig);
+    if(it.year) bits.push(it.year);
+    return bits.join(" · ");
+  }
+  function cardFor(it){
+    const poster = posterEl(it);
+    poster.appendChild(el("span", {class:"tag", text: typeLabel(it.type)}));
+    const logos = el("div", {class:"logos"}, [el("span", {class:"shimmer", "aria-hidden":"true"})]);
+    const card = el("button", {class:"card", type:"button", "data-nav":true, "aria-label": it.title + " — " + typeLabel(it.type) + (it.year ? " " + it.year : "")}, [
+      poster,
+      el("div", {class:"meta"}, [ el("h3", {text: it.title, dir:"auto"}), subLine(it) ? el("p", {class:"sub", text: subLine(it), dir:"auto"}) : null, logos ])
+    ]);
+    card.addEventListener("click", () => openDetail(it, card));
+    it._card = card; it._logos = logos; it._poster = poster;
+    return card;
+  }
+  function paintProviders(it){
+    const logos = it._logos; if(!logos) return;
+    logos.textContent = "";
+    if(it.provErr){ logos.appendChild(el("span", {class:"none", text:"تعذّر التحميل"})); return; }
+    const sa = it.sa;
+    const list = streamList(sa).length ? streamList(sa) : allProviders(sa);
+    if(!list.length){ logos.appendChild(el("span", {class:"none", text:"مو متوفر في السعودية"})); }
+    else {
+      const max = 4;
+      list.slice(0, max).forEach(p => logos.appendChild(el("img", {src: IMG + "w92" + p.logo_path, alt: p.provider_name, title: p.provider_name, loading:"lazy"})));
+      if(list.length > max) logos.appendChild(el("span", {class:"more", text:"+" + (list.length - max)}));
+      if(!streamList(sa).length) logos.appendChild(el("span", {class:"none", text:"إيجار أو شراء"}));
+    }
+    const old = it._poster.querySelector(".mine"); if(old) old.remove();
+    if(isMine(sa)) it._poster.appendChild(el("span", {class:"mine", text:"في اشتراكك"}));
+  }
+  function visibleByFilter(it){
+    if(filter === "all") return true;
+    if(it.sa === undefined) return true; // still loading: keep until known
+    if(filter === "stream") return streamList(it.sa).length > 0;
+    if(filter === "mine") return isMine(it.sa);
+    return true;
+  }
+  function applyFilter(){
+    let shown = 0;
+    items.forEach(it => { const v = visibleByFilter(it); it._card.hidden = !v; if(v) shown++; });
+    return shown;
+  }
+  function countLabel(n){
+    if(n === 0) return "ولا عنوان";
+    if(n === 1) return "عنوان واحد";
+    if(n === 2) return "عنوانين";
+    if(n <= 10) return n + " عناوين";
+    return n + " عنوان";
+  }
+  function setStatus(html){ statusEl.textContent = ""; statusEl.append(...html); }
+
+  async function render(list, heading){
+    items = list;
+    grid.textContent = "";
+    list.forEach(it => grid.appendChild(cardFor(it)));
+    updateStatus(heading);
+    // load providers with limited concurrency
+    let i = 0;
+    const worker = async () => {
+      while(i < list.length){
+        const it = list[i++];
+        try{ it.sa = await providersFor(it); }
+        catch(e){ it.sa = null; it.provErr = true; }
+        if(items !== list) return;
+        paintProviders(it);
+        applyFilter();
+        updateStatus(heading);
+      }
+    };
+    await Promise.all([worker(), worker(), worker(), worker()]);
+  }
+  function updateStatus(heading){
+    const shown = applyFilter();
+    const parts = [];
+    parts.push(el("b", {text: heading}));
+    parts.push(" · " + countLabel(shown));
+    if(filter === "mine" && !mySubs.size) parts.push(" · اختر اشتراكاتك من الإعدادات");
+    setStatus(parts);
+  }
+
+  /* ---------- flows ---------- */
+  async function loadTrending(){
+    if(!apiKey){ showWelcome(true); return; }
+    showWelcome(false);
+    const seq = ++searchSeq;
+    setStatus(["نحمّل الرائج…"]);
+    try{
+      const d = await tmdb("/trending/all/week", {language: LANG});
+      if(seq !== searchSeq) return;
+      const list = (d.results || []).map(shape).filter(Boolean).slice(0, 18);
+      render(list, "الرائج هالأسبوع");
+    }catch(e){ if(seq === searchSeq){ grid.textContent = ""; setStatus([errText(e)]); } }
+  }
+  async function doSearch(text){
+    const term = text.trim();
+    if(!term){ loadTrending(); return; }
+    if(!apiKey){ showWelcome(true); openSettings(); return; }
+    const seq = ++searchSeq;
+    setStatus(["ندوّر على «" + term + "»…"]);
+    try{
+      const d = await tmdb("/search/multi", {query: term, language: LANG, include_adult: "false", page: 1});
+      if(seq !== searchSeq) return;
+      const list = (d.results || []).map(shape).filter(Boolean).sort((a,b) => b.pop - a.pop).slice(0, 24);
+      if(!list.length){
+        grid.textContent = ""; items = [];
+        setStatus(["ما لقينا شي باسم «" + term + "». جرّب الاسم بالإنجليزي أو بدون «ال»."]);
+        return;
+      }
+      render(list, "نتائج «" + term + "»");
+    }catch(e){ if(seq === searchSeq){ grid.textContent = ""; items = []; setStatus([errText(e)]); } }
+  }
+  function showWelcome(on){ $("#welcome").hidden = !on; $("#results").hidden = on; }
+
+  /* ---------- detail sheet ---------- */
+  let lastFocus = null;
+  async function openDetail(it, from){
+    lastFocus = from || document.activeElement;
+    const body = $("#detailBody");
+    body.textContent = "";
+    const poster = posterEl(it, "w500");
+    const info = el("div", {style:"display:grid;gap:16px;min-width:0"});
+    info.appendChild(el("div", null, [
+      el("h2", {id:"dTitle", text: it.title, dir:"auto"}),
+      el("p", {class:"sub", text: [typeLabel(it.type), subLine(it)].filter(Boolean).join(" · ")})
+    ]));
+    if(it.overview) info.appendChild(el("p", {class:"overview", text: it.overview}));
+    const groupsBox = el("div", {class:"groups"}, [el("span", {class:"shimmer", "aria-hidden":"true"})]);
+    info.appendChild(groupsBox);
+    const actions = el("div", {class:"actions"});
+    const close = el("button", {class:"secondary", type:"button", "data-nav":true, text:"رجوع"});
+    close.addEventListener("click", closeDetail);
+    actions.appendChild(close);
+    info.appendChild(actions);
+    body.appendChild(el("div", {class:"detail"}, [poster, info]));
+    $("#detailSheet").hidden = false;
+    close.focus();
+
+    let sa = it.sa;
+    if(sa === undefined){ try{ sa = it.sa = await providersFor(it); }catch(e){ groupsBox.textContent = ""; groupsBox.appendChild(el("p", {class:"notice", text: errText(e)})); return; } }
+    groupsBox.textContent = "";
+    const groups = [
+      ["flatrate", "بالاشتراك"], ["free", "مجاني"], ["ads", "مجاني مع إعلانات"], ["rent", "إيجار"], ["buy", "شراء"]
+    ];
+    let any = false;
+    groups.forEach(([key, label]) => {
+      const arr = (sa && sa[key]) || [];
+      if(!arr.length) return;
+      any = true;
+      const row = el("div", {class:"provs"});
+      arr.slice().sort((a,b) => (a.display_priority||0) - (b.display_priority||0)).forEach(p => {
+        const mine = (key === "flatrate" || key === "free" || key === "ads") && mySubs.has(p.provider_id);
+        row.appendChild(el("div", {class:"prov" + (mine ? " is-mine" : "")}, [
+          el("img", {src: IMG + "w92" + p.logo_path, alt:""}),
+          el("span", {text: p.provider_name, dir:"auto"}),
+          mine ? el("em", {text:"مشترك"}) : null
+        ]));
+      });
+      groupsBox.appendChild(el("div", {class:"group"}, [el("h4", {text: label}), row]));
+    });
+    if(!any) groupsBox.appendChild(el("p", {class:"notice", text:"ما هو متوفر حالياً على أي منصة في السعودية حسب JustWatch."}));
+    if(sa && sa.link){
+      const a = el("a", {class:"primary", href: sa.link, target:"_blank", rel:"noopener", "data-nav":true, text:"افتح روابط المشاهدة"});
+      actions.prepend(a);
+      a.focus();
+    }
+  }
+  function closeDetail(){
+    $("#detailSheet").hidden = true;
+    if(lastFocus && document.contains(lastFocus)) lastFocus.focus();
+  }
+
+  /* ---------- settings ---------- */
+  function openSettings(){
+    lastFocus = document.activeElement;
+    $("#settingsSheet").hidden = false;
+    const ki = $("#keyInput");
+    ki.value = apiKey;
+    $("#keyMsg").textContent = apiKey ? "فيه مفتاح محفوظ." : "";
+    $("#keyMsg").className = "msg" + (apiKey ? " ok" : "");
+    ki.focus();
+    if(apiKey) loadProviderChoices();
+  }
+  function closeSettings(){
+    $("#settingsSheet").hidden = true;
+    if(lastFocus && document.contains(lastFocus)) lastFocus.focus(); else q.focus();
+  }
+  async function saveKey(){
+    const v = $("#keyInput").value.trim();
+    const msg = $("#keyMsg");
+    if(!v){ msg.className = "msg err"; msg.textContent = "الصق المفتاح أول."; return; }
+    const prev = apiKey; apiKey = v;
+    msg.className = "msg"; msg.textContent = "نجرّب المفتاح…";
+    try{
+      await tmdb("/configuration");
+      store.set("ahm_key", v);
+      msg.className = "msg ok"; msg.textContent = "تمام، المفتاح شغّال وانحفظ.";
+      provCache.clear();
+      loadProviderChoices();
+      if(q.value.trim()) doSearch(q.value); else loadTrending();
+    }catch(e){
+      apiKey = prev;
+      msg.className = "msg err"; msg.textContent = errText(e);
+    }
+  }
+  function clearKey(){
+    apiKey = ""; store.del("ahm_key"); provCache.clear();
+    $("#keyInput").value = "";
+    $("#keyMsg").className = "msg"; $("#keyMsg").textContent = "انمسح المفتاح من هالجهاز.";
+    $("#subs").textContent = "";
+    $("#subs").appendChild(el("p", {class:"hint", style:"margin:0", text:"حط المفتاح أول عشان تطلع قائمة المنصات في السعودية."}));
+    grid.textContent = ""; items = []; showWelcome(true);
+  }
+  let provChoicesLoaded = false;
+  async function loadProviderChoices(){
+    const box = $("#subs");
+    if(provChoicesLoaded && box.querySelector(".sub-chip")) return;
+    box.textContent = ""; box.appendChild(el("span", {class:"shimmer", "aria-hidden":"true"}));
+    try{
+      const [m, t] = await Promise.all([
+        tmdb("/watch/providers/movie", {watch_region: REGION, language: LANG}),
+        tmdb("/watch/providers/tv", {watch_region: REGION, language: LANG})
+      ]);
+      const map = new Map();
+      [].concat(m.results || [], t.results || []).forEach(p => {
+        const pr = (p.display_priorities && p.display_priorities[REGION]) ?? p.display_priority ?? 999;
+        const cur = map.get(p.provider_id);
+        if(!cur || pr < cur.pr) map.set(p.provider_id, {id:p.provider_id, name:p.provider_name, logo:p.logo_path, pr});
+      });
+      const list = [...map.values()].sort((a,b) => a.pr - b.pr);
+      box.textContent = "";
+      list.forEach(p => {
+        const b = el("button", {class:"sub-chip", type:"button", "data-nav":true, "aria-pressed": mySubs.has(p.id) ? "true" : "false"}, [
+          el("img", {src: IMG + "w92" + p.logo, alt:""}), el("span", {text: p.name, dir:"auto"})
+        ]);
+        b.addEventListener("click", () => {
+          if(mySubs.has(p.id)) mySubs.delete(p.id); else mySubs.add(p.id);
+          b.setAttribute("aria-pressed", mySubs.has(p.id) ? "true" : "false");
+          store.set("ahm_subs", [...mySubs]);
+          items.forEach(paintProviders); applyFilter();
+        });
+        box.appendChild(b);
+      });
+      provChoicesLoaded = true;
+    }catch(e){
+      box.textContent = ""; box.appendChild(el("p", {class:"msg err", text: errText(e)}));
+    }
+  }
+
+  /* ---------- remote-control navigation (arrow keys) ---------- */
+  function navTargets(){
+    const scope = !$("#detailSheet").hidden ? $("#detailSheet") : !$("#settingsSheet").hidden ? $("#settingsSheet") : document.querySelector(".wrap");
+    return [...scope.querySelectorAll("[data-nav]")].filter(n => !n.closest("[hidden]") && n.offsetParent !== null);
+  }
+  function move(dir){
+    const list = navTargets();
+    const cur = document.activeElement;
+    if(!list.includes(cur)){ (list[0] || q).focus(); return true; }
+    // Shortcuts that match how a remote is used: from the search bar or filters, Down goes to the first title; Up from the top row goes to the filters.
+    const cards = list.filter(n => n.classList.contains("card"));
+    if(dir === "down" && cards.length && (cur.closest(".search") || cur.closest("#filters"))){
+      if(cur.closest(".search") && !$("#results").hidden){ const chip = $("#filters [aria-pressed=\"true\"]"); if(chip && list.includes(chip)){ chip.focus(); return true; } }
+      cards[0].focus({preventScroll:true}); cards[0].scrollIntoView({block:"nearest"}); return true;
+    }
+    if(dir === "up" && cur.classList.contains("card") && cards.length && Math.abs(cur.getBoundingClientRect().top - cards[0].getBoundingClientRect().top) < 4){
+      const chip = $("#filters [aria-pressed=\"true\"]"); if(chip){ chip.focus(); return true; }
+    }
+    const r = cur.getBoundingClientRect();
+    const cx = r.left + r.width/2, cy = r.top + r.height/2;
+    let best = null, bestScore = Infinity;
+    list.forEach(n => {
+      if(n === cur) return;
+      const b = n.getBoundingClientRect();
+      const x = b.left + b.width/2, y = b.top + b.height/2;
+      const dx = x - cx, dy = y - cy;
+      let main, cross;
+      if(dir === "left"){ if(b.right > r.left + 2 && dx > -4) return; main = -dx; cross = Math.abs(dy); }
+      else if(dir === "right"){ if(b.left < r.right - 2 && dx < 4) return; main = dx; cross = Math.abs(dy); }
+      else if(dir === "up"){ if(b.bottom > r.top + 2) return; main = -dy; cross = Math.abs(dx); }
+      else { if(b.top < r.bottom - 2) return; main = dy; cross = Math.abs(dx); }
+      if(main <= 0) return;
+      const score = main + cross * 2.2;
+      if(score < bestScore){ bestScore = score; best = n; }
+    });
+    if(best){ best.focus({preventScroll:true}); best.scrollIntoView({block:"nearest", inline:"nearest", behavior:"smooth"}); return true; }
+    return false;
+  }
+  document.addEventListener("keydown", e => {
+    const inInput = e.target && (e.target.tagName === "INPUT");
+    const k = e.key;
+    if(k === "Escape" || k === "GoBack" || k === "BrowserBack" || (k === "Backspace" && !inInput)){
+      if(!$("#detailSheet").hidden){ e.preventDefault(); closeDetail(); return; }
+      if(!$("#settingsSheet").hidden){ e.preventDefault(); closeSettings(); return; }
+    }
+    const dirs = {ArrowLeft:"left", ArrowRight:"right", ArrowUp:"up", ArrowDown:"down"};
+    if(!dirs[k]) return;
+    if(inInput && (k === "ArrowLeft" || k === "ArrowRight")) return; // keep caret movement
+    if(move(dirs[k])) e.preventDefault();
+  });
+
+  /* ---------- wiring ---------- */
+  let typingTimer = null;
+  $("#searchForm").addEventListener("submit", e => { e.preventDefault(); clearTimeout(typingTimer); doSearch(q.value); });
+  q.addEventListener("input", () => {
+    clearTimeout(typingTimer);
+    const v = q.value;
+    if(v.trim().length >= 2 || !v.trim()) typingTimer = setTimeout(() => doSearch(v), 450);
+  });
+  $("#filters").addEventListener("click", e => {
+    const b = e.target.closest("[data-filter]"); if(!b) return;
+    filter = b.dataset.filter;
+    document.querySelectorAll("#filters .chip").forEach(c => c.setAttribute("aria-pressed", c === b ? "true" : "false"));
+    updateStatus(statusEl.querySelector("b") ? statusEl.querySelector("b").textContent : "");
+  });
+  $("#openSettings").addEventListener("click", openSettings);
+  $("#welcomeSettings").addEventListener("click", openSettings);
+  $("#closeSettings").addEventListener("click", closeSettings);
+  $("#saveKey").addEventListener("click", saveKey);
+  $("#keyInput").addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); saveKey(); } });
+  $("#clearKey").addEventListener("click", clearKey);
+  $("#detailSheet").addEventListener("click", e => { if(e.target.id === "detailSheet") closeDetail(); });
+  $("#settingsSheet").addEventListener("click", e => { if(e.target.id === "settingsSheet") closeSettings(); });
+
+  loadTrending();
+  q.focus();
+})();
+</script>
+</body>
+</html>

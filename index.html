@@ -162,6 +162,14 @@ main{position:relative;z-index:2;margin-top:clamp(-80px,-4vw,-30px);display:grid
 .prov img{width:34px;height:34px;border-radius:8px}
 .prov span{font-weight:500;font-size:.9em}
 .prov.is-mine{border-color:var(--ok)}
+a.prov{text-decoration:none;color:var(--text);cursor:pointer;transition:border-color .15s,background .15s}
+a.prov:hover,a.prov:focus-visible{border-color:var(--gold);background:#25252c;outline:none}
+.prov .ext{font-style:normal;color:var(--muted);font-size:.8em;margin-inline-start:2px}
+.prov.sm{padding:3px 8px 3px 4px;gap:6px}
+.prov.sm img{width:26px;height:26px;border-radius:6px}
+.prov.sm span{font-size:.82em}
+.abroad-row{align-items:flex-start;padding:8px 0}
+.abroad-row b{padding-top:6px}
 .prov em{font-style:normal;font-size:.72em;color:var(--ok);font-weight:700}
 .notice{margin:0;color:var(--muted);background:#1d1d23;border-radius:10px;padding:10px 14px}
 .d-more{padding:0 0 clamp(16px,2vw,30px)}
@@ -385,6 +393,22 @@ footer a{color:var(--muted)}
   const REGIONAL = /shahid|شاهد|osn|starz|tod\b|^tod|stc|jawwy|watch ?it|weyyak|yango|anghami|bein|mbc|rotana|aflam|tabii|ithra|thmanyah|ثمانية|cinemana|wavo|vip/i;
   const COUNTRY = {AE:"الإمارات", KW:"الكويت", QA:"قطر", BH:"البحرين", OM:"عُمان", EG:"مصر", JO:"الأردن", US:"أمريكا", GB:"بريطانيا", CA:"كندا", FR:"فرنسا", DE:"ألمانيا", TR:"تركيا", IN:"الهند", KR:"كوريا", JP:"اليابان", AU:"أستراليا"};
   const ABROAD = ["AE","KW","EG","US","GB","CA","TR","IN","KR"];
+  const SEARCH = [
+    [/netflix/i, v => "https://www.netflix.com/search?q=" + v],
+    [/youtube/i, v => "https://www.youtube.com/results?search_query=" + v],
+    [/apple tv/i, v => "https://tv.apple.com/search?term=" + v],
+    [/prime video|amazon video/i, v => "https://www.primevideo.com/search?phrase=" + v],
+    [/disney/i, v => "https://www.disneyplus.com/search?q=" + v],
+    [/hulu/i, v => "https://www.hulu.com/search?q=" + v],
+    [/crunchyroll/i, v => "https://www.crunchyroll.com/search?q=" + v],
+    [/google play/i, v => "https://play.google.com/store/search?c=movies&q=" + v]
+  ];
+  function provLink(p, it, region){
+    const name = p.provider_name || p.name || "", v = encodeURIComponent(it.orig || it.title);
+    for(const [re, f] of SEARCH) if(re.test(name)) return f(v);
+    const w = (it.world || {})[region];
+    return (w && w.link) || ("https://www.themoviedb.org/" + it.type + "/" + it.id + "/watch?locale=" + region);
+  }
 
   /* ---------- shaping ---------- */
   function shape(r, forceType){
@@ -780,19 +804,22 @@ footer a{color:var(--muted)}
         const r = el("div", {class:"provs"});
         arr.slice().sort((a,b) => (a.display_priority||0) - (b.display_priority||0)).forEach(p => {
           const mine = key !== "rent" && key !== "buy" && mySubs.has(p.provider_id);
-          r.appendChild(el("div", {class:"prov" + (mine ? " is-mine" : "")}, [el("img", {src: IMG + "w92" + p.logo_path, alt:""}), el("span", {text: p.provider_name, dir:"auto"}), mine ? el("em", {text:"مشترك"}) : null]));
+          r.appendChild(el("a", {class:"prov" + (mine ? " is-mine" : ""), href: provLink(p, it, REGION), target:"_blank", rel:"noopener", "data-nav":true, title:"افتح " + p.provider_name}, [el("img", {src: IMG + "w92" + p.logo_path, alt:""}), el("span", {text: p.provider_name, dir:"auto"}), mine ? el("em", {text:"مشترك"}) : null, el("i", {class:"ext", "aria-hidden":"true", text:"↗"})]));
         });
         groupsBox.appendChild(el("div", {class:"group"}, [el("h4", {text: label}), r]));
       });
       if(!any) groupsBox.appendChild(el("p", {class:"notice", text:"مو متوفر حالياً على أي منصة في السعودية حسب JustWatch."}));
       const world = it.world || {};
-      const abroad = ABROAD.filter(c => world[c] && streamList(world[c]).length).slice(0, 6);
+      const saIds = new Set(streamList(sa).map(p => p.provider_id));
+      const abroad = ABROAD.filter(c => world[c] && streamList(world[c]).some(p => !saIds.has(p.provider_id))).slice(0, 7);
       if(abroad.length){
-        const box = el("div", {class:"group abroad"}, [el("h4", {text:"خارج السعودية (بالاشتراك)"})]);
+        const box = el("div", {class:"group abroad"}, [el("h4", {text: any ? "منصات ثانية خارج السعودية" : "متوفر خارج السعودية على"})]);
         abroad.forEach(c => {
-          const names = streamList(world[c]).filter((p, i, arr) => arr.findIndex(x => x.provider_id === p.provider_id) === i).slice(0, 4);
-          box.appendChild(el("div", {class:"abroad-row"}, [el("b", {text: COUNTRY[c] || c}), el("div", {class:"abroad-logos"}, names.map(p => el("img", {src: IMG + "w92" + p.logo_path, alt: p.provider_name, title: p.provider_name})))]));
+          const list = streamList(world[c]).filter((p, i, arr) => arr.findIndex(x => x.provider_id === p.provider_id) === i && !saIds.has(p.provider_id)).slice(0, 4);
+          box.appendChild(el("div", {class:"abroad-row"}, [el("b", {text: COUNTRY[c] || c}),
+            el("div", {class:"provs"}, list.map(p => el("a", {class:"prov sm", href: provLink(p, it, c), target:"_blank", rel:"noopener", "data-nav":true, title:"افتح " + p.provider_name}, [el("img", {src: IMG + "w92" + p.logo_path, alt:""}), el("span", {text: p.provider_name, dir:"auto"}), el("i", {class:"ext", "aria-hidden":"true", text:"↗"})])))]));
         });
+        box.appendChild(el("p", {class:"hint", style:"margin-top:8px", text:"هذي المنصات تشتغل بحساب من نفس الدولة. الرابط يفتح لك موقع المنصة."}));
         groupsBox.appendChild(box);
       }
       if(sa && sa.link){ const a = el("a", {class:"btn btn-primary", href: sa.link, target:"_blank", rel:"noopener", "data-nav":true}, [svg("M8 5v14l11-7z"), "افتح روابط المشاهدة"]); btns.appendChild(a); a.focus({preventScroll:true}); }

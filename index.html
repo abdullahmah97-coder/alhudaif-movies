@@ -233,6 +233,16 @@ footer a{color:var(--muted)}
   .d-hero{aspect-ratio:16/10}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.tile:hover,.tile:focus{transform:none}}
+/* ---------- TV app mode ---------- */
+.tv :focus,.tv :focus-visible{outline:4px solid var(--gold);outline-offset:4px}
+.tv .arrow{display:none}
+.tv ::-webkit-scrollbar{display:none}
+.trailer{position:fixed;inset:0;z-index:80;background:#000;display:flex;flex-direction:column}
+.trailer[hidden]{display:none}
+.trailer .t-bar{display:flex;align-items:center;gap:.7em;padding:.7em 1.2em;background:#0b0b0e}
+.trailer .t-bar h3{margin:0 .4em;font-size:1.05em;font-weight:700;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trailer iframe{flex:1;width:100%;border:0;background:#000}
+.tvtoast{position:fixed;left:0;right:0;bottom:4vh;margin:0 auto;width:max-content;max-width:90vw;z-index:90;background:rgba(20,20,24,.95);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:.6em 1.5em;font-weight:700;box-shadow:0 10px 40px rgba(0,0,0,.5)}
 </style>
 </head>
 <body>
@@ -350,6 +360,60 @@ footer a{color:var(--muted)}
   };
   let apiKey = store.get("ahm_key", "");
   let mySubs = new Set(store.get("ahm_subs", []));
+
+  /* ---------- TV app mode: full screen + open apps on the TV through the home bridge ---------- */
+  const QS = new URLSearchParams(location.search);
+  const IS_TV = /SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|VIDAA/i.test(navigator.userAgent || "") || QS.has("tv");
+  if(QS.get("bridge")) store.set("ahm_bridge", QS.get("bridge").replace(/^https?:\/\//, "").replace(/\/+$/, ""));
+  const BRIDGE = store.get("ahm_bridge", "");
+  let toastTimer = 0;
+  function tvToast(text, ms){
+    let t = document.getElementById("tvToast");
+    if(!t){ t = document.createElement("div"); t.id = "tvToast"; t.className = "tvtoast"; t.setAttribute("role", "status"); document.body.appendChild(t); }
+    t.textContent = text; t.hidden = false; clearTimeout(toastTimer);
+    if(ms) toastTimer = setTimeout(() => { t.hidden = true; }, ms);
+  }
+  const isFull = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  function goFull(){
+    if(isFull()) return;
+    const d = document.documentElement, f = d.requestFullscreen || d.webkitRequestFullscreen;
+    if(!f) return;
+    try{ const r = f.call(d); if(r && r.catch) r.catch(() => {}); }catch(e){}
+  }
+  if(IS_TV){
+    document.documentElement.classList.add("tv");
+    let fullAsked = false;
+    addEventListener("keydown", e => {
+      if(!(e.key === "Enter" || e.keyCode === 13) || isFull()) return;
+      goFull();
+      if(!fullAsked){ fullAsked = true; e.preventDefault(); e.stopImmediatePropagation(); }
+    }, true);
+    addEventListener("click", goFull, true);
+    const hideHint = () => { if(isFull()){ const t = document.getElementById("tvToast"); if(t) t.hidden = true; } };
+    document.addEventListener("fullscreenchange", hideHint);
+    document.addEventListener("webkitfullscreenchange", hideHint);
+    setTimeout(() => { if(!isFull()) tvToast("اضغط OK في الريموت لملء الشاشة", 7000); }, 1200);
+  }
+  const APP_KEYS = [[/netflix/i,"netflix"],[/shahid|شاهد/i,"shahid"],[/osn/i,"osn"],[/youtube/i,"youtube"],[/prime video|amazon/i,"prime"],[/disney/i,"disney"],[/apple tv/i,"apple tv"],[/starz/i,"starzplay"],[/(^|\s)tod(\s|$)/i,"tod"],[/stc/i,"stc tv"],[/yango/i,"yango play"],[/watch ?it/i,"watch it"],[/spotify/i,"spotify"],[/tiktok/i,"tiktok"]];
+  function appKeyFor(name){ for(const [re, k] of APP_KEYS) if(re.test(name)) return k; return ""; }
+  function tvLaunch(app, meta, label){
+    if(!BRIDGE || !app) return false;
+    const img = new Image();
+    img.onload = () => tvToast("يفتح " + (label || app) + " على التلفزيون", 3500);
+    img.onerror = () => tvToast("ما انفتح. تأكد إن جهاز الكمبيوتر شغّال وClaude مفتوح عليه.", 6000);
+    tvToast("لحظة…", 3000);
+    img.src = "http://" + BRIDGE + "/launch?app=" + encodeURIComponent(app) + (meta ? "&meta=" + encodeURIComponent(meta) : "") + "&t=" + Date.now();
+    return true;
+  }
+  document.addEventListener("click", e => {
+    if(!BRIDGE) return;
+    const a = e.target && e.target.closest && e.target.closest("a.prov");
+    if(!a) return;
+    const name = ((a.querySelector("span") || a).textContent || "").trim(), key = appKeyFor(name);
+    if(!key) return;
+    e.preventDefault();
+    tvLaunch(key, "", name);
+  }, true);
   let saProviders = [];
   const genres = {movie:null, tv:null};
   const provCache = new Map();
@@ -825,6 +889,15 @@ footer a{color:var(--muted)}
       if(sa && sa.link){ const a = el("a", {class:"btn btn-primary", href: sa.link, target:"_blank", rel:"noopener", "data-nav":true}, [svg("M8 5v14l11-7z"), "افتح روابط المشاهدة"]); btns.appendChild(a); a.focus({preventScroll:true}); }
     }
     const back = el("button", {class:"btn btn-ghost", type:"button", "data-nav":true, text:"رجوع"}); back.addEventListener("click", closeDetail); btns.appendChild(back);
+    tmdb("/" + it.type + "/" + it.id + "/videos", {include_video_language: "ar,en,null"}).then(d => {
+      if($("#detailSheet").hidden || !back.isConnected) return;
+      const vids = ((d && d.results) || []).filter(x => x.site === "YouTube" && x.key);
+      const v = vids.find(x => x.type === "Trailer" && x.official) || vids.find(x => x.type === "Trailer") || vids.find(x => x.type === "Teaser") || vids[0];
+      if(!v) return;
+      const b = el("button", {class:"btn btn-ghost", type:"button", "data-nav":true}, [svg("M8 5v14l11-7z"), "الإعلان"]);
+      b.addEventListener("click", () => openTrailer(v.key, it.title, b));
+      btns.insertBefore(b, back);
+    }).catch(() => {});
 
     tmdb("/" + it.type + "/" + it.id + "/recommendations", {language: LANG, page:1}).then(d => {
       if($("#detailSheet").hidden) return;
@@ -835,6 +908,7 @@ footer a{color:var(--muted)}
     }).catch(() => {});
   }
   function closeDetail(){
+    closeTrailer();
     $("#detailSheet").hidden = true; document.body.style.overflow = "";
     if(lastFocus && document.contains(lastFocus) && !lastFocus.closest("#detailSheet")) lastFocus.focus();
   }
@@ -891,7 +965,40 @@ footer a{color:var(--muted)}
   }
 
   /* ---------- remote control (arrow keys) ---------- */
-  function scope(){ return !$("#detailSheet").hidden ? $("#detailSheet") : !$("#settingsSheet").hidden ? $("#settingsSheet") : document.body; }
+  /* ---------- in-app trailer player ---------- */
+  let trailerBack = null;
+  function trailerSheet(){
+    let t = document.getElementById("trailerSheet");
+    if(t) return t;
+    t = el("div", {id:"trailerSheet", class:"trailer", role:"dialog", "aria-modal":"true", "aria-label":"الإعلان", hidden:true});
+    const close = el("button", {class:"btn btn-ghost", type:"button", "data-nav":true, id:"tClose", text:"رجوع"});
+    close.addEventListener("click", closeTrailer);
+    const yt = el("button", {class:"btn btn-ghost", type:"button", "data-nav":true, id:"tYt", hidden:true}, [svg("M8 5v14l11-7z"), "شغّله في تطبيق يوتيوب"]);
+    yt.addEventListener("click", () => { const k = t.dataset.key; closeTrailer(); tvLaunch("youtube", "v=" + k, "يوتيوب"); });
+    t.append(el("div", {class:"t-bar"}, [close, yt, el("h3", {id:"tTitle", dir:"auto"})]), el("iframe", {id:"tFrame", title:"الإعلان", allow:"autoplay; encrypted-media; fullscreen; picture-in-picture", allowfullscreen:true, referrerpolicy:"strict-origin-when-cross-origin"}));
+    document.body.appendChild(t);
+    return t;
+  }
+  function openTrailer(key, title, from){
+    const t = trailerSheet();
+    trailerBack = from || document.activeElement;
+    t.dataset.key = key;
+    $("#tTitle").textContent = "الإعلان: " + (title || "");
+    $("#tYt").hidden = !BRIDGE;
+    $("#tFrame").src = "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(key) + "?autoplay=1&rel=0&playsinline=1&modestbranding=1&hl=ar";
+    t.hidden = false;
+    $("#tClose").focus({preventScroll:true});
+  }
+  function closeTrailer(){
+    const t = document.getElementById("trailerSheet");
+    if(!t || t.hidden) return;
+    $("#tFrame").src = "about:blank";
+    t.hidden = true;
+    if(trailerBack && trailerBack.isConnected) trailerBack.focus({preventScroll:true});
+  }
+  const trailerOpen = () => { const t = document.getElementById("trailerSheet"); return !!(t && !t.hidden); };
+
+  function scope(){ return trailerOpen() ? $("#trailerSheet") : !$("#detailSheet").hidden ? $("#detailSheet") : !$("#settingsSheet").hidden ? $("#settingsSheet") : document.body; }
   function targets(){ return [...scope().querySelectorAll("[data-nav]")].filter(n => !n.closest("[hidden]") && n.offsetParent !== null && !n.disabled); }
   function move(dir){
     const list = targets(), cur = document.activeElement;
@@ -922,6 +1029,7 @@ footer a{color:var(--muted)}
   document.addEventListener("keydown", e => {
     const inInput = e.target && e.target.tagName === "INPUT", k = e.key;
     if(k === "Escape" || k === "GoBack" || k === "BrowserBack" || (k === "Backspace" && !inInput)){
+      if(trailerOpen()){ e.preventDefault(); closeTrailer(); return; }
       if(!$("#detailSheet").hidden){ e.preventDefault(); closeDetail(); return; }
       if(!$("#settingsSheet").hidden){ e.preventDefault(); closeSettings(); return; }
       if(view !== "home" && !inInput){ e.preventDefault(); view === "platform" ? viewPlatforms() : goHome(); return; }

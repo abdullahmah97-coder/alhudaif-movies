@@ -363,7 +363,8 @@ footer a{color:var(--muted)}
 
   /* ---------- TV app mode: full screen + open apps on the TV through the home bridge ---------- */
   const QS = new URLSearchParams(location.search);
-  const IS_TV = /SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|VIDAA/i.test(navigator.userAgent || "") || QS.has("tv");
+  const TIZEN = (() => { try { return typeof tizen !== "undefined" && tizen.application ? tizen : null; } catch(e){ return null; } })();
+  const IS_TV = !!TIZEN || /SMART-TV|Tizen|Web0S|webOS|NetCast|HbbTV|VIDAA/i.test(navigator.userAgent || "") || QS.has("tv");
   if(QS.get("bridge")) store.set("ahm_bridge", QS.get("bridge").replace(/^https?:\/\//, "").replace(/\/+$/, ""));
   const BRIDGE = store.get("ahm_bridge", "");
   let toastTimer = 0;
@@ -380,8 +381,8 @@ footer a{color:var(--muted)}
     if(!f) return;
     try{ const r = f.call(d); if(r && r.catch) r.catch(() => {}); }catch(e){}
   }
-  if(IS_TV){
-    document.documentElement.classList.add("tv");
+  if(IS_TV) document.documentElement.classList.add("tv");
+  if(IS_TV && !TIZEN){
     let fullAsked = false;
     addEventListener("keydown", e => {
       if(!(e.key === "Enter" || e.keyCode === 13) || isFull()) return;
@@ -396,7 +397,31 @@ footer a{color:var(--muted)}
   }
   const APP_KEYS = [[/netflix/i,"netflix"],[/shahid|شاهد/i,"shahid"],[/osn/i,"osn"],[/youtube/i,"youtube"],[/prime video|amazon/i,"prime"],[/disney/i,"disney"],[/apple tv/i,"apple tv"],[/starz/i,"starzplay"],[/(^|\s)tod(\s|$)/i,"tod"],[/stc/i,"stc tv"],[/yango/i,"yango play"],[/watch ?it/i,"watch it"],[/spotify/i,"spotify"],[/tiktok/i,"tiktok"]];
   function appKeyFor(name){ for(const [re, k] of APP_KEYS) if(re.test(name)) return k; return ""; }
+  const TV_APP_IDS = {
+    netflix: ["3201907018807", "11101200001"], youtube: ["111299001912"], prime: ["3201910019365", "3201512006785"],
+    disney: ["3201901017640", "3202009021709", "3202204027038"], "apple tv": ["3201807016597"], spotify: ["3201606009684"],
+    tiktok: ["3202008021577"], shahid: ["Ggl33q588H.MBC"], osn: ["BlDC3WXVuw.sample"], "watch it": ["J5PGJgxrjt.WatchIT"],
+    "yango play": ["yvoS9TN5KY.YangoSpark"]
+  };
+  function tizenLaunch(app, label){
+    const ids = (TV_APP_IDS[app] || []).slice();
+    if(!ids.length) return false;
+    const next = () => {
+      const id = ids.shift();
+      if(!id){ tvToast((label || app) + " مو مثبّت على التلفزيون", 5000); return; }
+      try{ TIZEN.application.launch(id, () => {}, next); }catch(e){ next(); }
+    };
+    tvToast("يفتح " + (label || app), 2500);
+    next();
+    return true;
+  }
+  function openOnTv(url){
+    try{
+      TIZEN.application.launchAppControl(new tizen.ApplicationControl("http://tizen.org/appcontrol/operation/view", url), null, () => {}, () => tvToast("ما قدرت أفتح الرابط", 4000));
+    }catch(e){ tvToast("ما قدرت أفتح الرابط", 4000); }
+  }
   function tvLaunch(app, meta, label){
+    if(TIZEN && app) return tizenLaunch(app, label);
     if(!BRIDGE || !app) return false;
     const img = new Image();
     img.onload = () => tvToast("يفتح " + (label || app) + " على التلفزيون", 3500);
@@ -406,13 +431,14 @@ footer a{color:var(--muted)}
     return true;
   }
   document.addEventListener("click", e => {
-    if(!BRIDGE) return;
-    const a = e.target && e.target.closest && e.target.closest("a.prov");
+    if(!BRIDGE && !TIZEN) return;
+    const a = e.target && e.target.closest && e.target.closest("a[href]");
     if(!a) return;
-    const name = ((a.querySelector("span") || a).textContent || "").trim(), key = appKeyFor(name);
-    if(!key) return;
-    e.preventDefault();
-    tvLaunch(key, "", name);
+    if(a.classList.contains("prov")){
+      const name = ((a.querySelector("span") || a).textContent || "").trim(), key = appKeyFor(name);
+      if(key && (!TIZEN || TV_APP_IDS[key])){ e.preventDefault(); tvLaunch(key, "", name); return; }
+    }
+    if(TIZEN && a.target === "_blank" && /^https?:/.test(a.href)){ e.preventDefault(); openOnTv(a.href); }
   }, true);
   let saProviders = [];
   const genres = {movie:null, tv:null};
@@ -984,7 +1010,7 @@ footer a{color:var(--muted)}
     trailerBack = from || document.activeElement;
     t.dataset.key = key;
     $("#tTitle").textContent = "الإعلان: " + (title || "");
-    $("#tYt").hidden = !BRIDGE;
+    $("#tYt").hidden = !BRIDGE && !TIZEN;
     $("#tFrame").src = "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(key) + "?autoplay=1&rel=0&playsinline=1&modestbranding=1&hl=ar";
     t.hidden = false;
     $("#tClose").focus({preventScroll:true});
@@ -1027,12 +1053,13 @@ footer a{color:var(--muted)}
     return false;
   }
   document.addEventListener("keydown", e => {
-    const inInput = e.target && e.target.tagName === "INPUT", k = e.key;
+    const inInput = e.target && e.target.tagName === "INPUT", k = e.keyCode === 10009 ? "GoBack" : e.key;
     if(k === "Escape" || k === "GoBack" || k === "BrowserBack" || (k === "Backspace" && !inInput)){
       if(trailerOpen()){ e.preventDefault(); closeTrailer(); return; }
       if(!$("#detailSheet").hidden){ e.preventDefault(); closeDetail(); return; }
       if(!$("#settingsSheet").hidden){ e.preventDefault(); closeSettings(); return; }
       if(view !== "home" && !inInput){ e.preventDefault(); view === "platform" ? viewPlatforms() : goHome(); return; }
+      if(TIZEN && k === "GoBack"){ e.preventDefault(); try{ TIZEN.application.getCurrentApplication().exit(); }catch(err){} return; }
     }
     const dirs = {ArrowLeft:"left", ArrowRight:"right", ArrowUp:"up", ArrowDown:"down"};
     if(!dirs[k]) return;

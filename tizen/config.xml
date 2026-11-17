@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets" id="https://abdullahmah97-coder.github.io/alhudaif-movies" version="1.0.0" viewmodes="maximized">
+    <tizen:application id="HdfFlx2611.HudaifFlix" package="HdfFlx2611" required_version="3.0"/>
+    <content src="index.html"/>
+    <icon src="icon.png"/>
+    <name xml:lang="ar">حضيف فليكس</name>
+    <name>Hudaif Flix</name>
+    <description xml:lang="ar">اكتب اسم الفيلم أو المسلسل وتعرف وين تشوفه، وتفتح التطبيق الرسمي بضغطة.</description>
+    <author>Abdullah Alhudaif</author>
+    <feature name="http://tizen.org/feature/screen.size.all"/>
+    <tizen:privilege name="http://tizen.org/privilege/internet"/>
+    <tizen:privilege name="http://tizen.org/privilege/application.launch"/>
+    <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
+    <tizen:profile name="tv-samsung"/>
+    <access origin="*" subdomains="true"/>
+    <tizen:allow-navigation>*</tizen:allow-navigation>
+    <tizen:setting screen-orientation="landscape" context-menu="disable" background-support="disable" encryption="disable" install-location="auto" hwkey-event="enable"/>
+</widget>

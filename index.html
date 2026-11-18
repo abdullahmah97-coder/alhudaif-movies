@@ -1122,6 +1122,16 @@ footer a{color:var(--muted)}
   const plural = (n, one, two, few, many) => n === 1 ? one : n === 2 ? two : n <= 10 ? n + " " + few : n + " " + many;
   const games = n => n ? plural(n, "مباراة", "مباراتين", "مباريات", "مباراة") : "ما فيه مباريات";
   const gameCount = leagues => leagues.reduce((n, l) => n + l.matches.length, 0);
+  // ESPN's crests are 500-pixel PNGs; its resizer sends a 120-pixel copy, a third of the bytes and a tenth of the
+  // memory a TV spends decoding dozens of them. A crest already shown is drawn at once on the next refresh.
+  const seenCrests = new Set();
+  function crest(u){
+    const src = /^https:\/\/a\.espncdn\.com\/i\//.test(u) ? "https://a.espncdn.com/combiner/i?img=" + u.slice(21) + "&w=120&h=120" : u;
+    const img = el("img", {src, alt:"", loading: seenCrests.has(src) ? null : "lazy"});
+    img.addEventListener("load", () => seenCrests.add(src), {once:true});
+    img.addEventListener("error", () => { if(img.src !== u) img.src = u; }, {once:true});
+    return img;
+  }
   function startsIn(ms){
     const min = Math.round((ms - Date.now()) / 6e4);
     if(min <= 0) return "تبدأ الحين";
@@ -1208,7 +1218,7 @@ footer a{color:var(--muted)}
     if(box.hidden) return;
     const chip = (slug, label, n, logo) => {
       const b = el("button", {class:"mx-chip", type:"button", "data-nav":true, "data-league": slug, "aria-pressed": matchLeague === slug ? "true" : "false", "aria-label": label + "، " + games(n)},
-        [logo ? el("img", {src: logo, alt:"", loading:"lazy"}) : null, el("span", {text: label}), el("em", {text: String(n)})]);
+        [logo ? crest(logo) : null, el("span", {text: label}), el("em", {text: String(n)})]);
       b.addEventListener("click", () => { if(matchLeague !== slug){ matchLeague = slug; renderMatches(); } });
       return b;
     };
@@ -1254,7 +1264,7 @@ footer a{color:var(--muted)}
   }
   function leagueBlock(l, cards, tv){
     const logo = l.live ? el("span", {class:"mx-lgl"}, [el("i", {class:"mx-dot"})])
-      : l.logo ? el("span", {class:"mx-lgl"}, [el("img", {src: l.logo, alt:"", loading:"lazy"})])
+      : l.logo ? el("span", {class:"mx-lgl"}, [crest(l.logo)])
       : el("span", {class:"mx-lgl is-blank"}, [svg(CUP_ICON)]);
     const head = el("div", {class:"mx-lgh"}, [
       logo,
@@ -1267,7 +1277,7 @@ footer a{color:var(--muted)}
     const st = m.state, start = Date.parse(m.start), decided = st === "post" && (m.home.winner || m.away.winner);
     const soon = st === "pre" ? startsIn(start) : "";
     const team = t => el("div", {class:"fx-tm" + (decided ? (t.winner ? " win" : " lose") : "")}, [
-      el("span", {class:"fx-logo"}, [t.logo ? el("img", {src: t.logo, alt:"", loading:"lazy"}) : null]),
+      el("span", {class:"fx-logo"}, [t.logo ? crest(t.logo) : null]),
       el("b", {text: t.name, dir:"auto"}),
       t.record ? el("small", {text: t.record, dir:"ltr"}) : null
     ]);

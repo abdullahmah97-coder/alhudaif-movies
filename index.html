@@ -136,6 +136,30 @@ main{position:relative;z-index:2;margin-top:clamp(-80px,-4vw,-30px);display:grid
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip{background:transparent;border:1.5px solid var(--line);border-radius:999px;padding:.3em 1em;cursor:pointer;color:var(--muted);font-weight:500}
 .chip[aria-pressed="true"]{background:var(--text);color:#090806;border-color:var(--text);font-weight:700}
+/* matches */
+.m-league{display:grid;gap:12px;margin-bottom:clamp(20px,2vw,36px)}
+.m-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.m-head img{width:36px;height:36px;object-fit:contain;background:#fff;border-radius:9px;padding:3px}
+.m-head h3{margin-top:0;margin-bottom:0;font-size:clamp(18px,1.35vw,26px);font-weight:700}
+.m-tv{color:var(--gold);font-weight:600;font-size:.92em}
+.m-head .btn{margin-inline-start:auto}
+.m-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(290px,23vw,440px),1fr));gap:clamp(10px,.9vw,16px)}
+.match{all:unset;box-sizing:border-box;display:block;padding:16px;background:var(--bg-2);border:1.5px solid var(--line);border-radius:12px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.match:hover,.match:focus-visible{border-color:var(--gold);outline:none;box-shadow:0 0 0 3px rgba(217,178,111,.35)}
+.m-in{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+.team{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;min-width:0}
+.team img,.team i{width:clamp(42px,3vw,58px);height:clamp(42px,3vw,58px);object-fit:contain;filter:drop-shadow(0 0 1px rgba(255,255,255,.35))}
+.team b{font-weight:600;font-size:clamp(14px,.95vw,18px);line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.team.win b{color:var(--gold-hi)}
+.mid{display:grid;justify-items:center;gap:4px;min-width:96px}
+.score{display:flex;align-items:baseline;gap:.4em;font-size:clamp(24px,1.9vw,36px);font-weight:700;font-variant-numeric:tabular-nums}
+.score small{font-size:.5em;color:var(--muted);margin-inline-start:2px}
+.ktime{font-size:clamp(19px,1.35vw,27px);font-weight:700}
+.mlabel{font-size:.86em;color:var(--muted);white-space:nowrap}
+.mlabel.live{color:#ff6b5e;font-weight:700}
+.mlabel.live::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff6b5e;margin-inline-end:6px;vertical-align:middle;animation:livepulse 1.2s infinite}
+@keyframes livepulse{50%{opacity:.25}}
+.m-empty{color:var(--muted);padding:24px 0;margin:0}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(200px,17vw,340px),1fr));gap:clamp(12px,1vw,18px) clamp(10px,.8vw,14px)}
 .grid .tile{flex:none;width:100%}
 .empty{color:var(--muted);margin:0;max-width:60ch}
@@ -222,7 +246,7 @@ a.prov:hover,a.prov:focus-visible{border-color:var(--gold);background:#25252c;ou
 .abroad-logos{display:flex;gap:6px;flex-wrap:wrap}
 .abroad-logos img{width:28px;height:28px;border-radius:7px}
 .plat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(140px,11vw,210px),1fr));gap:clamp(12px,1vw,20px)}
-.plat{all:unset;box-sizing:border-box;cursor:pointer;display:grid;justify-items:center;gap:10px;padding:clamp(14px,1.2vw,22px) 10px;background:var(--tile);border:2px solid transparent;border-radius:14px;text-align:center;transition:transform .15s ease,border-color .15s ease}
+.plat{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;padding:clamp(14px,1.2vw,22px) 10px;background:var(--tile);border:2px solid transparent;border-radius:14px;text-align:center;transition:transform .15s ease,border-color .15s ease}
 .plat img{width:clamp(64px,5vw,96px);aspect-ratio:1;border-radius:16px}
 .plat span{font-weight:700;font-size:.92em;line-height:1.3}
 .plat em{font-style:normal;font-size:.72em;color:var(--ok);font-weight:700}
@@ -269,6 +293,7 @@ footer a{color:var(--muted)}
     <button type="button" data-nav data-go="movie">أفلام</button>
     <button type="button" data-nav data-go="tv">مسلسلات</button>
     <button type="button" data-nav data-go="platforms">المنصات</button>
+    <button type="button" data-nav data-go="matches">المباريات</button>
     <button type="button" data-nav data-go="mine">اشتراكاتي</button>
   </nav>
   <div class="searchbox">
@@ -300,6 +325,15 @@ footer a{color:var(--muted)}
 <section class="results" id="platformsView" hidden>
   <div class="results-head"><div><h2>المنصات</h2><p id="platSub">اختر منصة وتطلع لك أفلامها ومسلسلاتها.</p></div></div>
   <div id="platGrid"></div>
+</section>
+
+<!-- MATCHES -->
+<section class="results" id="matchesView" hidden aria-live="polite">
+  <div class="results-head">
+    <div><h2>المباريات</h2><p id="matchSub">المواعيد والنتائج بتوقيت السعودية، والقناة اللي تنقل كل دوري عندنا.</p></div>
+    <div class="chips" id="matchDays" role="group" aria-label="اختر اليوم"></div>
+  </div>
+  <div id="matchList"></div>
 </section>
 
 <!-- SEARCH / LIST VIEW -->
@@ -418,12 +452,24 @@ footer a{color:var(--muted)}
     tiktok: ["3202008021577"], shahid: ["Ggl33q588H.MBC"], osn: ["BlDC3WXVuw.sample"], "watch it": ["J5PGJgxrjt.WatchIT"],
     "yango play": ["yvoS9TN5KY.YangoSpark"]
   };
+  // Apps whose Samsung id we don't keep: found by name among the apps installed on the TV.
+  const TV_APP_NAMES = {tod: /\bTOD\b|beIN/i, thmanyah: /thmanyah|ثمانية/i, starzplay: /starz/i, shahid: /shahid|شاهد/i};
+  function launchByName(app, label){
+    const re = TV_APP_NAMES[app], missing = () => tvToast((label || app) + " مو مثبّت على التلفزيون. تلقاه في متجر تطبيقات سامسونج.", 6000);
+    if(!re || !TIZEN.application.getAppsInfo){ missing(); return; }
+    try{
+      TIZEN.application.getAppsInfo(list => {
+        const hit = (list || []).find(a => re.test(a.name || "") || re.test(a.id || ""));
+        if(hit) TIZEN.application.launch(hit.id, () => {}, missing); else missing();
+      }, missing);
+    }catch(e){ missing(); }
+  }
   function tizenLaunch(app, label){
     const ids = (TV_APP_IDS[app] || []).slice();
-    if(!ids.length) return false;
+    if(!ids.length && !TV_APP_NAMES[app]) return false;
     const next = () => {
       const id = ids.shift();
-      if(!id){ tvToast((label || app) + " مو مثبّت على التلفزيون", 5000); return; }
+      if(!id){ launchByName(app, label); return; }
       try{ TIZEN.application.launch(id, () => {}, next); }catch(e){ next(); }
     };
     tvToast("يفتح " + (label || app), 2500);
@@ -446,6 +492,11 @@ footer a{color:var(--muted)}
     return true;
   }
   document.addEventListener("click", e => {
+    const app = e.target && e.target.closest && e.target.closest("[data-app]");
+    if(app){
+      if(TIZEN){ e.preventDefault(); tizenLaunch(app.dataset.app, app.dataset.label); return; }
+      if(app.tagName !== "A" && app.dataset.web){ window.open(app.dataset.web, "_blank", "noopener"); return; }
+    }
     if(!BRIDGE && !TIZEN) return;
     const a = e.target && e.target.closest && e.target.closest("a[href]");
     if(!a) return;
@@ -689,7 +740,7 @@ footer a{color:var(--muted)}
   }
 
   /* ---------- views ---------- */
-  const SECTIONS = ["#homeView", "#listView", "#platformsView"];
+  const SECTIONS = ["#homeView", "#listView", "#platformsView", "#matchesView"];
   function showSection(id){ SECTIONS.forEach(s => $(s).hidden = s !== id); }
   function setNav(which){ document.querySelectorAll(".nav [data-go]").forEach(b => b.setAttribute("aria-current", b.dataset.go === which ? "page" : "false")); }
   function beginView(name, section){
@@ -980,6 +1031,89 @@ footer a{color:var(--muted)}
     if(lastFocus && document.contains(lastFocus) && !lastFocus.closest("#detailSheet")) lastFocus.focus();
   }
 
+  /* ---------- matches: fixtures and live scores by league, with the broadcaster in Saudi Arabia ---------- */
+  const SPORTS = "https://hfplqbnbuskiaeblxpfo.supabase.co/functions/v1/flix-sports";
+  const RIYADH = "Asia/Riyadh", DAY_MS = 864e5;
+  let matchDay = 0, matchTimer = null;
+  const riyadhDate = off => new Date(Date.now() + 3 * 36e5 + off * DAY_MS).toISOString().slice(0, 10);
+  function dayLabel(off){
+    if(off === 0) return "اليوم";
+    if(off === -1) return "أمس";
+    if(off === 1) return "بكرة";
+    try{ return new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {weekday:"long", day:"numeric", month:"short", timeZone: RIYADH}).format(new Date(Date.now() + off * DAY_MS)); }
+    catch(e){ return riyadhDate(off).slice(5).replace("-", "/"); }
+  }
+  function kickoff(iso){
+    try{ return new Intl.DateTimeFormat("ar-SA-u-nu-latn", {hour:"numeric", minute:"2-digit", timeZone: RIYADH}).format(new Date(iso)); }
+    catch(e){ return new Date(Date.parse(iso) + 3 * 36e5).toISOString().slice(11, 16); }
+  }
+  function renderDays(){
+    const box = $("#matchDays"), hadFocus = box.contains(document.activeElement);
+    box.textContent = "";
+    for(let off = -1; off <= 5; off++){
+      const b = el("button", {class:"chip", type:"button", "data-nav":true, "aria-pressed": off === matchDay ? "true" : "false", text: dayLabel(off)});
+      b.addEventListener("click", () => { if(off !== matchDay) viewMatches(off); });
+      box.appendChild(b);
+    }
+    if(hadFocus){ const on = box.querySelector('[aria-pressed="true"]'); if(on) on.focus(); }
+  }
+  async function viewMatches(off){
+    if(typeof off === "number") matchDay = off;
+    const my = beginView("matches", "#matchesView");
+    renderDays();
+    const list = $("#matchList"); list.textContent = "";
+    list.appendChild(el("div", {class:"skel", style:"aspect-ratio:auto;height:140px;flex:none"}));
+    loadMatches(my, true);
+  }
+  async function loadMatches(my, first){
+    clearTimeout(matchTimer);
+    let data = null;
+    try{
+      const r = await fetch(SPORTS + "/matches?date=" + riyadhDate(matchDay));
+      if(r.ok) data = await r.json();
+    }catch(e){}
+    if(my !== seq) return;
+    if(!data){
+      if(first){ $("#matchList").textContent = ""; $("#matchList").appendChild(el("p", {class:"m-empty", text:"ما قدرنا نجيب المباريات الحين. نحاول مرة ثانية بعد شوي."})); }
+      matchTimer = setTimeout(() => { if(my === seq) loadMatches(my, first); }, 60000);
+      return;
+    }
+    renderMatches(data);
+    if(matchDay === 0) matchTimer = setTimeout(() => { if(my === seq) loadMatches(my, false); }, data.live ? 30000 : 120000);
+  }
+  function renderMatches(data){
+    const list = $("#matchList"), cur = document.activeElement, keep = cur && cur.dataset ? cur.dataset.mid || cur.dataset.lg : null;
+    list.textContent = "";
+    const leagues = data.leagues || [], tvs = data.broadcasters || {};
+    if(!leagues.length){
+      list.appendChild(el("p", {class:"m-empty", text: "ما فيه مباريات في هالدوريات " + (matchDay === 0 ? "اليوم" : "هاليوم") + ". اختر يوم ثاني من فوق."}));
+      return;
+    }
+    leagues.forEach(lg => {
+      const tv = tvs[lg.tv] || null;
+      const open = tv ? el("a", {class:"btn btn-ghost", href: tv.web, target:"_blank", rel:"noopener", "data-nav":true, "data-app": tv.app, "data-label": tv.name, "data-lg": lg.slug}, [svg("M8 5v14l11-7z"), "افتح " + tv.name]) : null;
+      const head = el("div", {class:"m-head"}, [lg.logo ? el("img", {src: lg.logo, alt:"", loading:"lazy"}) : null, el("h3", {text: lg.name}), tv ? el("span", {class:"m-tv", text:"تنقلها " + tv.name}) : null, open]);
+      const grid = el("div", {class:"m-grid"});
+      lg.matches.forEach(m => grid.appendChild(matchCard(m, tv)));
+      list.appendChild(el("section", {class:"m-league"}, [head, grid]));
+    });
+    if(keep){ const n = list.querySelector('[data-mid="' + keep + '"],[data-lg="' + keep + '"]'); if(n) n.focus({preventScroll:true}); }
+  }
+  function matchCard(m, tv){
+    const team = (t, win) => el("div", {class:"team" + (win ? " win" : "")}, [t.logo ? el("img", {src: t.logo, alt:"", loading:"lazy"}) : el("i"), el("b", {text: t.name, dir:"auto"})]);
+    const pens = m.home.pens != null && m.away.pens != null;
+    let mid;
+    if(m.state === "pre") mid = [el("span", {class:"ktime", text: kickoff(m.start)}), el("span", {class:"mlabel", text:"بتوقيت السعودية"})];
+    else if(m.state === "off") mid = [el("span", {class:"ktime", text:"–"}), el("span", {class:"mlabel", text: m.label})];
+    else mid = [
+      el("span", {class:"score"}, [el("span", null, [String(m.home.score), pens ? el("small", {text:"(" + m.home.pens + ")"}) : null]), el("span", {text:"-"}), el("span", null, [String(m.away.score), pens ? el("small", {text:"(" + m.away.pens + ")"}) : null])]),
+      el("span", {class:"mlabel" + (m.state === "in" ? " live" : ""), text: m.label})
+    ];
+    const b = el("button", {class:"match", type:"button", "data-nav":true, "data-mid": m.id, "aria-label": m.home.name + " ضد " + m.away.name + (tv ? "، تنقلها " + tv.name : "")}, [el("div", {class:"m-in"}, [team(m.home, m.home.winner), el("div", {class:"mid"}, mid), team(m.away, m.away.winner)])]);
+    if(tv){ b.dataset.app = tv.app; b.dataset.label = tv.name; b.dataset.web = tv.web; }
+    return b;
+  }
+
   /* ---------- settings ---------- */
   let subsChanged = false;
   function openSettings(){
@@ -1140,7 +1274,7 @@ footer a{color:var(--muted)}
   $("#homeBtn").addEventListener("click", goHome);
   document.querySelectorAll(".nav [data-go]").forEach(b => b.addEventListener("click", () => {
     const g = b.dataset.go; q.value = "";
-    if(g === "home") viewHome(); else if(g === "movie" || g === "tv") viewType(g); else if(g === "platforms") viewPlatforms(); else if(g === "mine") viewMine();
+    if(g === "home") viewHome(); else if(g === "movie" || g === "tv") viewType(g); else if(g === "platforms") viewPlatforms(); else if(g === "matches") viewMatches(0); else if(g === "mine") viewMine();
   }));
   $("#openSettings").addEventListener("click", openSettings);
   $("#closeSettings").addEventListener("click", closeSettings);

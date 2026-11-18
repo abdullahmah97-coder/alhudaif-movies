@@ -281,7 +281,8 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
   function read(){
     var h = location.hash, m;
     try{
-      if((m = /[#&]z=([^&]+)/.exec(h)) && window.LZString) return JSON.parse(LZString.decompressFromEncodedURIComponent(m[1]));
+      // "." and "_" stand in for "+" and "$", which the TV launcher can mangle
+      if((m = /[#&]z=([^&]+)/.exec(h)) && window.LZString) return JSON.parse(LZString.decompressFromEncodedURIComponent(m[1].replace(/\./g, "+").replace(/_/g, "$")));
       if((m = /[#&]d=([^&]+)/.exec(h))){
         var b = m[1].replace(/-/g, "+").replace(/_/g, "/"); while(b.length % 4) b += "=";
         var bin = atob(b), bytes = new Uint8Array(bin.length);

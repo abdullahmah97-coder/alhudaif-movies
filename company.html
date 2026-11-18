@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>قناة الشركة · مكتب الإدارة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Changa:wght@500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<style>
+/* The company channel on the living-room TV, in the head office identity: the building and each office as the
+   rendered rooms from the head office (charcoal, orange LED light), with the staff in them tagged with what they
+   are working on right now. Shots alternate like a TV director: the building, each office floor, then a meeting
+   in the manager's office where the employee responsible for an item presents it on camera.
+   The page stores nothing: what it shows travels in the address after "#", which the browser never sends to the
+   server. Laid out on a fixed 1920×1080 stage scaled to the screen; written for the TV's older browser engine. */
+:root{
+  --bg:#0A0A0B; --panel:rgba(13,13,15,.9); --panel-2:#17171B; --line:#26262C; --line-2:#34343B;
+  --ink:#F3F3F4; --ink-2:#B5B5BC; --ink-3:#7D7D86;
+  --accent:#FF6326; --accent-ink:#170A03; --accent-soft:rgba(255,99,38,.14); --accent-line:rgba(255,99,38,.5);
+  --ok:#36D07F; --ok-soft:rgba(54,208,127,.14); --idle:#7D7D86;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}
+body{color:var(--ink);font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+.d{font-family:"Changa","IBM Plex Sans Arabic",sans-serif}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;-webkit-transform-origin:0 0;transform-origin:0 0;
+  background:radial-gradient(ellipse 900px 600px at 34% 46%,rgba(255,99,38,.11),rgba(255,99,38,0) 70%),var(--bg)}
+
+/* chrome that stays on screen */
+.top{position:absolute;left:0;top:0;width:1920px;height:104px;padding:0 56px;display:flex;align-items:center;justify-content:space-between;z-index:20;
+  background:linear-gradient(180deg,rgba(0,0,0,.92),rgba(0,0,0,.6) 70%,rgba(0,0,0,0))}
+.brand{display:flex;align-items:center}
+.brand svg{width:54px;height:54px;margin-left:18px;-webkit-filter:drop-shadow(0 0 10px rgba(255,99,38,.35));filter:drop-shadow(0 0 10px rgba(255,99,38,.35))}
+.brand b{display:block;font-size:30px;font-weight:700;line-height:1.1}
+.brand b em{font-style:normal;color:var(--accent)}
+.brand span{display:block;margin-top:4px;font-family:"Anton",sans-serif;font-size:15px;letter-spacing:.28em;color:var(--ink-3);direction:ltr;text-align:right}
+.chip{position:absolute;left:50%;top:26px;-webkit-transform:translateX(-50%);transform:translateX(-50%);padding:5px 22px 7px;border-radius:99px;border:1px solid var(--line-2);background:rgba(13,13,15,.8);font-size:22px;font-weight:600;white-space:nowrap}
+.chip i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-left:10px;vertical-align:2px;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+.side{display:flex;align-items:center;direction:ltr}
+.clock{text-align:center;padding:0 22px;border-left:1px solid var(--line-2)}
+.clock b{display:block;font-size:27px;font-weight:600;direction:rtl}
+.clock span{display:block;font-size:14px;color:var(--ink-3)}
+.live{display:flex;align-items:center;margin-right:14px;padding:5px 14px;border-radius:99px;background:var(--accent-soft);color:#FF9A6E;font-size:17px;font-weight:700;direction:rtl}
+.live i{width:11px;height:11px;border-radius:50%;background:var(--accent);margin-left:8px;box-shadow:0 0 8px var(--accent);animation:pulse 1.4s infinite}
+.live.paused{background:rgba(255,255,255,.08);color:var(--ink-3)}
+.live.paused i{background:var(--ink-3);box-shadow:none;animation:none}
+.tick{position:absolute;left:0;top:1016px;width:1920px;height:64px;display:flex;align-items:center;z-index:20;background:rgba(5,5,6,.96);border-top:1px solid var(--line-2)}
+.tick-l{flex:none;height:64px;padding:0 26px;display:flex;align-items:center;background:var(--accent);color:var(--accent-ink);font-size:21px;font-weight:700}
+.tick-w{flex:1;position:relative;height:64px;overflow:hidden}
+.tick-t{position:absolute;top:0;left:0;height:64px;line-height:64px;white-space:nowrap;font-size:22px;will-change:transform}
+.tick-t span{display:inline-block;padding:0 6px}
+.tick-t b{color:var(--ink);font-weight:600}
+.tick-t em{font-style:normal;color:var(--accent);font-weight:600}
+.tick-t .sep{display:inline-block;width:8px;height:8px;margin:0 22px;vertical-align:3px;background:var(--accent);border-radius:2px;-webkit-transform:rotate(45deg);transform:rotate(45deg)}
+.tick-n{flex:none;max-width:540px;height:64px;line-height:64px;padding:0 24px;border-right:1px solid var(--line-2);font-size:18px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tick-n b{color:var(--ink);font-weight:600}
+.prog{position:absolute;left:0;top:-2px;height:2px;width:0;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+
+/* shots */
+.shot{position:absolute;left:0;top:0;width:1920px;height:1080px;opacity:0;transition:opacity 1s ease}
+.shot.on{opacity:1}
+.rnd{position:absolute;overflow:hidden}
+.kb{position:absolute;left:0;top:0;width:100%;height:100%}
+.kb img{display:block;width:100%;height:100%}
+.vig{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;
+  background:radial-gradient(ellipse 54% 54% at 50% 50%,rgba(10,10,11,0) 62%,rgba(10,10,11,.85) 100%)}
+@keyframes kb{from{-webkit-transform:scale(1);transform:scale(1)}to{-webkit-transform:scale(var(--z,1.12));transform:scale(var(--z,1.12))}}
+
+/* the building */
+.fl{position:absolute;left:900px;width:470px;padding:12px 18px 13px;border-radius:14px;background:var(--panel);border:1px solid var(--line-2);animation:in-r .7s ease-out backwards}
+.fl b{display:block;font-size:27px;font-weight:700;line-height:1.25}
+.fl span{display:block;font-size:18px;color:var(--ink-2)}
+.fl em{font-style:normal;color:var(--accent);font-weight:600}
+.fl i{position:absolute;left:-64px;top:50%;width:64px;height:2px;background:linear-gradient(90deg,var(--accent),rgba(255,99,38,.25))}
+.fl i:after{content:"";position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+.fl.hot{border-color:var(--accent-line);box-shadow:0 0 30px rgba(255,99,38,.18)}
+.ttl{position:absolute;right:64px;top:150px;width:420px;animation:in-r .8s ease-out backwards}
+.ttl h1{margin:0;font-size:84px;font-weight:800;line-height:1.05}
+.ttl h1 em{font-style:normal;color:var(--accent)}
+.ttl p{margin:14px 0 0;font-size:22px;color:var(--ink-2)}
+.big{display:flex;margin-top:34px;padding:22px 0;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2)}
+.big div{flex:1}
+.big b{display:block;font-size:72px;font-weight:700;line-height:1}
+.big span{display:block;margin-top:8px;font-size:19px;color:var(--ink-2)}
+.big .w b{color:var(--accent)}
+.big .b b{color:var(--ok)}
+.ttl small{display:block;margin-top:16px;font-size:16px;color:var(--ink-3)}
+
+/* an office */
+.op{position:absolute;right:64px;top:124px;width:440px;padding:24px 26px 18px;border-radius:22px;background:var(--panel);border:1px solid var(--line-2);box-shadow:0 30px 70px rgba(0,0,0,.6);animation:in-r .8s ease-out backwards}
+.op:before{content:"";position:absolute;top:-1px;left:30px;right:30px;height:2px;background:linear-gradient(90deg,rgba(255,99,38,0),var(--accent),rgba(255,99,38,0));box-shadow:0 0 12px var(--accent)}
+.op h2{margin:0;font-size:40px;font-weight:700;line-height:1.2}
+.op h2 i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-left:12px;vertical-align:8px;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+.op .sub{margin:2px 0 0;font-size:18px;color:var(--ink-2)}
+.cnt{display:flex;margin-top:16px;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.cnt div{flex:1;text-align:center}
+.cnt b{display:block;font-size:40px;font-weight:700;line-height:1.1}
+.cnt span{display:block;font-size:16px;color:var(--ink-2)}
+.cnt .w b{color:var(--accent)}
+.cnt .b b{color:var(--ok)}
+.cnt .d b{color:var(--ink-2)}
+.rows{margin:6px 0 0;padding:0;list-style:none}
+.rows li{position:relative;padding:8px 26px 8px 4px;border-bottom:1px solid var(--line);transition:background .3s}
+.rows li:last-child{border-bottom:0}
+.rows li:before{content:"";position:absolute;right:6px;top:18px;width:10px;height:10px;border-radius:50%;background:var(--idle)}
+.rows li.w:before{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.rows li.b:before{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.rows li.h:before{background:#B5B5BC}
+.rows b{display:block;font-size:19px;font-weight:600;line-height:1.3}
+.rows span{display:block;font-size:16px;line-height:1.4;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rows li.on{background:var(--accent-soft);border-radius:10px}
+.rows li.on b{color:#FFB08C}
+.rows em{float:left;margin-top:2px;padding:0 7px;border-radius:6px;border:1px solid var(--accent-line);color:var(--accent);font-size:13px;font-weight:700;font-style:normal;direction:ltr}
+.op .x{margin:8px 0 0;font-size:16px;color:var(--ink-2)}
+.op .s{margin:6px 0 0;font-size:14px;color:var(--ink-3)}
+
+.tg{position:absolute;width:0;height:0}
+.tg .pin{position:absolute;left:-6px;top:-6px;width:12px;height:12px;border-radius:50%;background:var(--idle);border:2px solid rgba(0,0,0,.6)}
+.tg .stem{position:absolute;left:-1px;bottom:6px;width:2px;height:54px;background:linear-gradient(0deg,var(--idle),rgba(125,125,134,0))}
+.tg .lb{position:absolute;left:0;bottom:58px;-webkit-transform:translateX(-50%);transform:translateX(-50%);-webkit-transform-origin:50% 100%;transform-origin:50% 100%;
+  max-width:300px;padding:7px 14px 8px;border-radius:12px;background:rgba(13,13,15,.92);border:1px solid var(--line-2);white-space:nowrap;
+  transition:transform .45s cubic-bezier(.2,.8,.2,1),box-shadow .45s,border-color .45s;animation:pop .5s ease-out backwards}
+.tg .lb b{display:block;font-size:15px;font-weight:700;color:var(--ink-2);line-height:1.3}
+.tg .lb span{display:block;max-width:270px;font-size:18px;font-weight:600;line-height:1.35;overflow:hidden;text-overflow:ellipsis}
+.tg.w .pin{background:var(--accent);box-shadow:0 0 12px var(--accent)}
+.tg.w .stem{background:linear-gradient(0deg,var(--accent),rgba(255,99,38,0))}
+.tg.w .lb{border-color:var(--accent-line)}
+.tg.w .lb b{color:var(--accent)}
+.tg.b .pin{background:var(--ok);box-shadow:0 0 12px var(--ok)}
+.tg.b .stem{background:linear-gradient(0deg,var(--ok),rgba(54,208,127,0))}
+.tg.b .lb b{color:var(--ok)}
+.tg .pin:after{content:"";position:absolute;left:-8px;top:-8px;width:24px;height:24px;border-radius:50%;border:2px solid currentColor;opacity:0}
+.tg.w .pin,.tg.w .pin:after{color:var(--accent)}
+.tg.b .pin,.tg.b .pin:after{color:var(--ok)}
+.tg.w .pin:after,.tg.b .pin:after{animation:ping 2s ease-out infinite}
+.tg.talk{z-index:5}
+.tg.talk .lb{-webkit-transform:translateX(-50%) scale(1.1);transform:translateX(-50%) scale(1.1);border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,99,38,.35),0 0 34px rgba(255,99,38,.35)}
+.dots{display:inline-block;margin-right:6px;vertical-align:1px}
+.dots i{display:inline-block;width:5px;height:5px;margin:0 1.5px;border-radius:50%;background:var(--ok);animation:dot 1.2s infinite}
+.dots i:nth-child(2){animation-delay:.2s}
+.dots i:nth-child(3){animation-delay:.4s}
+
+.cap{position:absolute;left:80px;top:880px;width:1300px;min-height:100px;padding:16px 26px 18px;border-radius:16px;background:rgba(5,5,6,.82);border:1px solid var(--line-2);border-right:4px solid var(--accent);
+  opacity:0;transition:opacity .4s}
+.cap.on{opacity:1}
+.cap b{display:block;font-size:17px;font-weight:700;color:var(--accent)}
+.cap p{margin:2px 0 0;font-size:26px;line-height:1.55}
+.car{display:inline-block;width:3px;height:.95em;margin-right:4px;vertical-align:-3px;background:var(--accent);animation:blink 1s steps(1) infinite}
+
+/* a meeting in the manager's office */
+.room .kb img{opacity:.7}
+.pres{position:absolute;left:64px;top:124px;width:470px;animation:in-l .8s ease-out backwards}
+.cam{position:relative;width:470px;height:372px;border-radius:20px;overflow:hidden;border:2px solid var(--line-2);background:#0d0b0a;box-shadow:0 30px 70px rgba(0,0,0,.6)}
+.talking .cam{border-color:var(--accent);animation:ring 1.4s ease-in-out infinite}
+.cam-i{position:absolute;left:0;top:0;width:100%;height:100%;background-repeat:no-repeat;animation:kb 20s ease-out both;--z:1.08}
+.cam:after{content:"";position:absolute;left:0;right:0;bottom:0;height:46%;background:linear-gradient(0deg,rgba(0,0,0,.88),rgba(0,0,0,0))}
+.oa{position:absolute;top:14px;right:14px;z-index:2;display:flex;align-items:center;padding:4px 12px 5px;border-radius:99px;background:rgba(0,0,0,.6);font-size:15px;font-weight:700;color:#FFB08C}
+.bars{display:inline-flex;align-items:flex-end;height:15px;margin-left:8px}
+.bars i{display:block;width:3px;height:4px;margin:0 1px;border-radius:2px;background:var(--accent)}
+.talking .bars i{animation:bar .9s ease-in-out infinite}
+.talking .bars i:nth-child(2){animation-delay:-.3s}
+.talking .bars i:nth-child(3){animation-delay:-.6s}
+.talking .bars i:nth-child(4){animation-delay:-.15s}
+.lt{position:absolute;right:20px;left:20px;bottom:16px;z-index:2}
+.lt b{display:block;font-size:30px;font-weight:700;line-height:1.2}
+.lt span{display:block;font-size:17px;color:var(--ink-2)}
+.lt em{font-style:normal;color:var(--accent);font-weight:600}
+.say{margin-top:14px;min-height:150px;padding:16px 20px 18px;border-radius:16px;background:var(--panel);border:1px solid var(--line-2);border-right:4px solid var(--accent);font-size:24px;line-height:1.7}
+.scr{position:absolute;right:64px;top:124px;width:860px;height:640px;padding:26px 34px 24px;border-radius:22px;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--panel);border:1px solid var(--line-2);box-shadow:0 30px 70px rgba(0,0,0,.6);animation:in-r .9s .1s ease-out backwards}
+.scr:before{content:"";position:absolute;top:-1px;left:34px;right:34px;height:2px;background:linear-gradient(90deg,rgba(255,99,38,0),var(--accent),rgba(255,99,38,0));box-shadow:0 0 12px var(--accent)}
+.s-lbl{flex:none;display:flex;align-items:center;font-size:18px;color:var(--ink-2)}
+.s-lbl b{flex:none;margin-left:12px;padding:2px 12px;border-radius:8px;background:var(--accent-soft);color:#FF9A6E;font-size:16px}
+.s-lbl span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.s-title{flex:none;margin:12px 0 0;font-size:42px;font-weight:700;line-height:1.28}
+.s-sub{flex:none;margin:4px 0 0;font-size:19px;color:var(--ink-2)}
+.facts{flex:none;display:flex;flex-wrap:wrap;margin:14px -6px 0}
+.fact{width:calc(33.333% - 12px);margin:6px;padding:10px 15px 11px;border-radius:12px;background:var(--panel-2);border:1px solid var(--line);animation:up .5s ease-out backwards}
+.fact span{display:block;font-size:15px;color:var(--ink-3)}
+.fact b{display:block;margin-top:2px;font-size:22px;font-weight:600;line-height:1.35}
+.fact.hot{border-color:var(--accent-line);background:var(--accent-soft)}
+.fact.hot b{color:#FF9A6E}
+.pts{flex:none;list-style:none;margin:12px 0 0;padding:0}
+.pts li{position:relative;margin-top:5px;padding-right:22px;font-size:20px;line-height:1.6;color:var(--ink-2);animation:up .5s ease-out backwards}
+.pts li:before{content:"";position:absolute;right:3px;top:13px;width:8px;height:8px;border-radius:2px;background:var(--accent);-webkit-transform:rotate(45deg);transform:rotate(45deg)}
+.decide{flex:none;margin-top:auto;display:flex;align-items:center;padding:13px 18px;border-radius:14px;border:1px solid var(--accent-line);background:var(--accent-soft);animation:up .5s ease-out backwards}
+.decide b{flex:none;margin-left:16px;font-size:17px;color:#FF9A6E}
+.decide span{font-size:22px;font-weight:600;line-height:1.5}
+.decide em{flex:none;margin-right:auto;padding:1px 9px;border-radius:7px;border:1px solid var(--accent-line);color:var(--accent);font-size:15px;font-weight:700;font-style:normal;direction:ltr}
+.tight .s-title{font-size:36px}.tight .fact b{font-size:19px}.tight .pts li{font-size:18px;margin-top:3px}.tight .decide span{font-size:20px}
+.tighter .pts li:nth-child(n+3){display:none}.tighter .s-sub{display:none}
+.att{position:absolute;right:64px;top:782px;width:860px;display:flex;flex-wrap:wrap;align-items:center;animation:up .6s .6s ease-out backwards}
+.att > span{margin-left:10px;font-size:16px;color:var(--ink-3)}
+.att i{display:inline-block;margin:4px 0 4px 8px;padding:3px 12px 4px;border-radius:99px;background:rgba(13,13,15,.85);border:1px solid var(--line-2);font-size:16px;font-style:normal;color:var(--ink-2)}
+.att i.on{border-color:var(--accent-line);color:#FFB08C}
+
+@keyframes in-r{from{opacity:0;-webkit-transform:translateX(40px);transform:translateX(40px)}to{opacity:1;-webkit-transform:none;transform:none}}
+@keyframes in-l{from{opacity:0;-webkit-transform:translateX(-40px);transform:translateX(-40px)}to{opacity:1;-webkit-transform:none;transform:none}}
+@keyframes up{from{opacity:0;-webkit-transform:translateY(12px);transform:translateY(12px)}to{opacity:1;-webkit-transform:none;transform:none}}
+@keyframes pop{from{opacity:0;-webkit-transform:translateX(-50%) translateY(8px) scale(.9);transform:translateX(-50%) translateY(8px) scale(.9)}to{opacity:1}}
+@keyframes ping{0%{opacity:.8;-webkit-transform:scale(.5);transform:scale(.5)}100%{opacity:0;-webkit-transform:scale(1.6);transform:scale(1.6)}}
+@keyframes ring{50%{box-shadow:0 0 0 6px rgba(255,99,38,.18),0 30px 70px rgba(0,0,0,.6)}}
+@keyframes bar{50%{height:15px}}
+@keyframes dot{0%,60%,100%{opacity:.25}30%{opacity:1}}
+@keyframes blink{50%{opacity:0}}
+@keyframes pulse{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.kb,.cam-i,.fl,.ttl,.op,.lb,.fact,.pts li,.decide,.pres,.scr,.att{animation:none!important}}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="shots"></div>
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M26 4H40Q48 4 48 12V48H12Q4 48 4 40V26Q4 4 26 4Z" fill="#FF7A30"/><path d="M74 4H60Q52 4 52 12V48H88Q96 48 96 40V26Q96 4 74 4Z" fill="#F3F3F4"/><path d="M26 96H40Q48 96 48 88V52H12Q4 52 4 60V74Q4 96 26 96Z" fill="#F3F3F4"/><path d="M74 96H60Q52 96 52 88V52H88Q96 52 96 60V74Q96 96 74 96Z" fill="#F3F3F4"/></svg>
+      <div><b class="d">مكتب الإدارة<em>.</em></b><span>HEAD OFFICE · NEW YORK</span></div>
+    </div>
+    <div class="chip d" id="chip"><i></i><span></span></div>
+    <div class="side">
+      <div class="live" id="live"><i></i><span>مباشر</span></div>
+      <div class="clock"><b id="ny">–</b><span>نيويورك</span></div>
+      <div class="clock"><b id="ry">–</b><span>الرياض</span></div>
+    </div>
+  </header>
+  <footer class="tick">
+    <div class="prog" id="prog"></div>
+    <div class="tick-l">آخر الأخبار</div>
+    <div class="tick-w" id="tickw"><div class="tick-t" id="tickt"></div></div>
+    <div class="tick-n" id="next"></div>
+  </footer>
+</div>
+<script>
+var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",n="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-$",e={};function t(r,o){if(!e[r]){e[r]={};for(var n=0;n<r.length;n++)e[r][r.charAt(n)]=n}return e[r][o]}var i={compressToBase64:function(r){if(null==r)return"";var n=i._compress(r,6,function(r){return o.charAt(r)});switch(n.length%4){default:case 0:return n;case 1:return n+"===";case 2:return n+"==";case 3:return n+"="}},decompressFromBase64:function(r){return null==r?"":""==r?null:i._decompress(r.length,32,function(n){return t(o,r.charAt(n))})},compressToUTF16:function(o){return null==o?"":i._compress(o,15,function(o){return r(o+32)})+" "},decompressFromUTF16:function(r){return null==r?"":""==r?null:i._decompress(r.length,16384,function(o){return r.charCodeAt(o)-32})},compressToUint8Array:function(r){for(var o=i.compress(r),n=new Uint8Array(2*o.length),e=0,t=o.length;e<t;e++){var s=o.charCodeAt(e);n[2*e]=s>>>8,n[2*e+1]=s%256}return n},decompressFromUint8Array:function(o){if(null==o)return i.decompress(o);for(var n=new Array(o.length/2),e=0,t=n.length;e<t;e++)n[e]=256*o[2*e]+o[2*e+1];var s=[];return n.forEach(function(o){s.push(r(o))}),i.decompress(s.join(""))},compressToEncodedURIComponent:function(r){return null==r?"":i._compress(r,6,function(r){return n.charAt(r)})},decompressFromEncodedURIComponent:function(r){return null==r?"":""==r?null:(r=r.replace(/ /g,"+"),i._decompress(r.length,32,function(o){return t(n,r.charAt(o))}))},compress:function(o){return i._compress(o,16,function(o){return r(o)})},_compress:function(r,o,n){if(null==r)return"";var e,t,i,s={},u={},a="",p="",c="",l=2,f=3,h=2,d=[],m=0,v=0;for(i=0;i<r.length;i+=1)if(a=r.charAt(i),Object.prototype.hasOwnProperty.call(s,a)||(s[a]=f++,u[a]=!0),p=c+a,Object.prototype.hasOwnProperty.call(s,p))c=p;else{if(Object.prototype.hasOwnProperty.call(u,c)){if(c.charCodeAt(0)<256){for(e=0;e<h;e++)m<<=1,v==o-1?(v=0,d.push(n(m)),m=0):v++;for(t=c.charCodeAt(0),e=0;e<8;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}else{for(t=1,e=0;e<h;e++)m=m<<1|t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t=0;for(t=c.charCodeAt(0),e=0;e<16;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}0==--l&&(l=Math.pow(2,h),h++),delete u[c]}else for(t=s[c],e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;0==--l&&(l=Math.pow(2,h),h++),s[p]=f++,c=String(a)}if(""!==c){if(Object.prototype.hasOwnProperty.call(u,c)){if(c.charCodeAt(0)<256){for(e=0;e<h;e++)m<<=1,v==o-1?(v=0,d.push(n(m)),m=0):v++;for(t=c.charCodeAt(0),e=0;e<8;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}else{for(t=1,e=0;e<h;e++)m=m<<1|t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t=0;for(t=c.charCodeAt(0),e=0;e<16;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1}0==--l&&(l=Math.pow(2,h),h++),delete u[c]}else for(t=s[c],e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;0==--l&&(l=Math.pow(2,h),h++)}for(t=2,e=0;e<h;e++)m=m<<1|1&t,v==o-1?(v=0,d.push(n(m)),m=0):v++,t>>=1;for(;;){if(m<<=1,v==o-1){d.push(n(m));break}v++}return d.join("")},decompress:function(r){return null==r?"":""==r?null:i._decompress(r.length,32768,function(o){return r.charCodeAt(o)})},_decompress:function(o,n,e){var t,i,s,u,a,p,c,l=[],f=4,h=4,d=3,m="",v=[],g={val:e(0),position:n,index:1};for(t=0;t<3;t+=1)l[t]=t;for(s=0,a=Math.pow(2,2),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;switch(s){case 0:for(s=0,a=Math.pow(2,8),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;c=r(s);break;case 1:for(s=0,a=Math.pow(2,16),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;c=r(s);break;case 2:return""}for(l[3]=c,i=c,v.push(c);;){if(g.index>o)return"";for(s=0,a=Math.pow(2,d),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;switch(c=s){case 0:for(s=0,a=Math.pow(2,8),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;l[h++]=r(s),c=h-1,f--;break;case 1:for(s=0,a=Math.pow(2,16),p=1;p!=a;)u=g.val&g.position,g.position>>=1,0==g.position&&(g.position=n,g.val=e(g.index++)),s|=(u>0?1:0)*p,p<<=1;l[h++]=r(s),c=h-1,f--;break;case 2:return v.join("")}if(0==f&&(f=Math.pow(2,d),d++),l[c])m=l[c];else{if(c!==h)return null;m=i+i.charAt(0)}v.push(m),l[h++]=i+m.charAt(0),i=m,0==--f&&(f=Math.pow(2,d),d++)}}};return i}();"function"==typeof define&&define.amd?define(function(){return LZString}):"undefined"!=typeof module&&null!=module?module.exports=LZString:"undefined"!=typeof angular&&null!=angular&&angular.module("LZString",[]).factory("LZString",function(){return LZString});
+</script>
+<script>
+(function(){
+  "use strict";
+  var IMG = "assets/hq/", IW = 1600, IH = 1195;
+  var OFFICES = { app: ["مكتب التطبيق", "التطبيق", "أرك أب"], azem: ["مكتب عزم أرك", "عزم أرك", "العقارات والعقود"], films: ["مكتب الأفلام", "الأفلام", "Alhudaif Films"], tcon: ["مكتب المعدات", "المعدات", "TCON"] };
+  // the heads of each office's sections (as on the head office dashboard)
+  var HEADS = {
+    azem: [["mgmt", "المدير التنفيذي"], ["prop", "مدير الأملاك والتأجير"], ["mkt", "مدير التسويق والوساطة"], ["fin", "مدير المالية والتقارير"], ["cmp", "مدير الامتثال والقانونية"]],
+    films: [["ep", "المنتج التنفيذي"], ["writers", "رئيس غرفة الكتّاب"], ["director", "المخرج"], ["studio", "مشرف المؤثرات والتوليد"], ["post", "مشرف ما بعد الإنتاج"], ["quality", "مدير الجودة والامتثال"], ["publish", "مدير النشر"], ["fazaa", "منتج المسلسل"]],
+    tcon: [["gm", "مكتب المدير العام"], ["assistant", "مساعد مدير الإدارة"], ["legal", "الوكيل القانوني"], ["auditor", "المدقق المالي"], ["accountant", "المحاسب"], ["sales", "وكيل المبيعات"], ["marketing", "وكيل التسويق"]],
+    app: [["ceo", "مدير المكتب"], ["partners", "مدير الشركاء"], ["ops", "مدير العمليات"], ["community", "مدير المجتمع"], ["growth", "مدير النمو"], ["eng", "مدير المهندسين"]]
+  };
+  // where the people stand or sit in each office render (pixels of the 1600×1195 image, at the head)
+  var PEOPLE = {
+    azem: [[555, 575, 54], [870, 575, 150], [1115, 612, 54]],
+    films: [[832, 695, 54], [1030, 660, 170], [585, 505, 54]],
+    tcon: [[770, 545, 54], [612, 630, 170], [1096, 626, 54], [1256, 592, 170]],
+    app: [[372, 622, 54], [530, 632, 150], [632, 582, 54], [722, 652, 150], [806, 592, 54], [976, 632, 150]],
+    hq: [[862, 552], [1146, 512]]
+  };
+  // the building render: each floor's band in % of the image height (from the head office)
+  var FLOORS = [["hq", 17.2, 12.0], ["app", 29.6, 11.4], ["azem", 42.2, 10.8], ["films", 54.0, 10.6], ["tcon", 66.0, 10.8]];
+  var $ = function(id){ return document.getElementById(id); };
+  function el(tag, cls, text){ var n = document.createElement(tag); if(cls) n.className = cls; if(text != null) n.textContent = text; return n; }
+  function off(k){ return OFFICES[k] || ["مكتب الإدارة", "الإدارة", ""]; }
+
+  /* fit the 1920×1080 stage to the screen */
+  var stage = $("stage");
+  function fit(){
+    var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    stage.style.transform = stage.style.webkitTransform = "scale(" + s + ")";
+    stage.style.left = Math.round((window.innerWidth - 1920 * s) / 2) + "px";
+    stage.style.top = Math.round((window.innerHeight - 1080 * s) / 2) + "px";
+  }
+  fit(); window.addEventListener("resize", fit);
+  ["building.jpg", "azem.jpg", "films.jpg", "tcon.jpg", "app.jpg", "hq.jpg"].forEach(function(f){ var i = new Image(); i.src = IMG + f; });
+
+  /* Saudi time is UTC+3; New York follows US daylight saving (2nd Sunday of March to 1st Sunday of November) */
+  function nthSunday(y, m, n){ var d = new Date(Date.UTC(y, m, 1)); return (7 - d.getUTCDay()) % 7 + 1 + 7 * (n - 1); }
+  function nyOffset(ms){ var y = new Date(ms).getUTCFullYear(); var a = Date.UTC(y, 2, nthSunday(y, 2, 2), 7), b = Date.UTC(y, 10, nthSunday(y, 10, 1), 6); return ms >= a && ms < b ? -4 : -5; }
+  function clock(ms, o){ var d = new Date(ms + o * 36e5), h = d.getUTCHours(), m = d.getUTCMinutes(); return (h % 12 || 12) + ":" + (m < 10 ? "0" : "") + m + (h < 12 ? " ص" : " م"); }
+  function tickClock(){ var now = Date.now(); $("ny").textContent = clock(now, nyOffset(now)); $("ry").textContent = clock(now, 3); }
+  tickClock(); setInterval(tickClock, 15000);
+
+  /* what to show: #z=<lz-string> or #d=<base64url of UTF-8 JSON> */
+  function read(){
+    var h = location.hash, m;
+    try{
+      if((m = /[#&]z=([^&]+)/.exec(h)) && window.LZString) return JSON.parse(LZString.decompressFromEncodedURIComponent(m[1]));
+      if((m = /[#&]d=([^&]+)/.exec(h))){
+        var b = m[1].replace(/-/g, "+").replace(/_/g, "/"); while(b.length % 4) b += "=";
+        var bin = atob(b), bytes = new Uint8Array(bin.length);
+        for(var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return JSON.parse(new TextDecoder("utf-8").decode(bytes));
+      }
+    }catch(e){}
+    return null;
+  }
+  var d = read();
+  if(!d || !d.o){
+    d = { o: ["azem", "films", "tcon", "app"].map(function(k){ return { k: k, c: [0, 0, 0], a: HEADS[k].map(function(h, i){ return [h[1], "i", "", "", h[0], "", i < PEOPLE[k].length ? i : -1]; }) }; }),
+      m: [{ o: "", p: { n: "السكرتيرة", r: "مكتب الإدارة", cam: ["hq", 1] }, say: "أهلاً أستاذ عبدالله، المكاتب الأربعة حاضرة. اسأل Claude عن أي عقد أو شغلة، وأنادي لك الموظف المسؤول يعرضها هنا.",
+        t: "قناة الشركة جاهزة", s: "مكتب الإدارة · نيويورك", f: [["مكتب عزم أرك", "العقارات والعقود"], ["مكتب الأفلام", "Alhudaif Films"], ["مكتب المعدات", "TCON"]], b: ["مثال: «وش وضع عقد شقة 2؟»"] }], focus: 0 };
+  }
+  var syncTxt = "";
+  if(d.at){ var at = Date.parse(d.at); if(!isNaN(at)){ var same = Math.floor((at + 108e5) / 864e5) === Math.floor((Date.now() + 108e5) / 864e5); syncTxt = "آخر مزامنة: " + clock(at, 3) + (same ? " اليوم" : ""); } }
+  var byKey = {}; (d.o || []).forEach(function(o){ byKey[o.k] = o; });
+
+  // an office render, contain-fitted in a box; the box zooms slowly toward the people
+  function render(file, box, origin, z){
+    var r = el("div", "rnd"), kb = el("div", "kb"), im = el("img");
+    r.style.left = box[0] + "px"; r.style.top = box[1] + "px"; r.style.width = box[2] + "px"; r.style.height = Math.round(box[2] * IH / IW) + "px";
+    im.src = IMG + file; im.alt = ""; kb.appendChild(im);
+    kb.style.transformOrigin = kb.style.webkitTransformOrigin = (origin[0] / IW * 100).toFixed(1) + "% " + (origin[1] / IH * 100).toFixed(1) + "%";
+    kb.style.setProperty("--z", z || 1.12); kb.style.animation = "kb 22s ease-out both";
+    r.appendChild(kb); r.appendChild(el("div", "vig"));
+    r._kb = kb; return r;
+  }
+  function speak(node, words, every, done){
+    var i = 0, span = el("span"), car = el("i", "car"), t;
+    node.textContent = ""; node.appendChild(span); node.appendChild(car);
+    t = setInterval(function(){
+      if(i >= words.length){ clearInterval(t); if(car.parentNode) car.parentNode.removeChild(car); if(done) done(); return; }
+      span.textContent = words.slice(0, ++i).join(" ");
+    }, every);
+    return function(){ clearInterval(t); };
+  }
+
+  /* ---------- the building ---------- */
+  function buildingShot(){
+    var shot = el("div", "shot building");
+    var H = 900, W = Math.round(H * 1240 / 1539), left = 130, top = 112;
+    var r = el("div", "rnd"), kb = el("div", "kb"), im = el("img");
+    r.style.left = left + "px"; r.style.top = top + "px"; r.style.width = W + "px"; r.style.height = H + "px";
+    im.src = IMG + "building.jpg"; im.alt = ""; kb.appendChild(im); kb.style.transformOrigin = "50% 45%"; kb.style.setProperty("--z", 1.05); kb.style.animation = "kb 16s ease-out both";
+    r.appendChild(kb); r.appendChild(el("div", "vig")); shot.appendChild(r);
+    var tw = 0, tb = 0;
+    FLOORS.forEach(function(f, i){
+      var o = byKey[f[0]], c = (o && o.c) || [0, 0, 0], fl = el("div", "fl d" + (c[0] ? " hot" : ""));
+      var y = top + H * (f[1] + f[2] / 2) / 100;
+      fl.style.top = Math.round(y - 42) + "px"; fl.style.left = (left + W + 64) + "px"; fl.style.animationDelay = (.3 + i * .15) + "s";
+      fl.appendChild(el("i"));
+      if(f[0] === "hq"){ fl.appendChild(el("b", null, "الإدارة · المدير والسكرتيرة")); }
+      else { tw += c[0]; tb += c[1]; fl.appendChild(el("b", null, off(f[0])[0])); }
+      var s = el("span"); fl.appendChild(s);
+      fl._fill = function(){ if(f[0] === "hq"){ s.appendChild(document.createTextNode("كل المكاتب: ")); s.appendChild(el("em", null, tw + " ينتظرونك")); return; }
+        if(!c[0] && !c[1]){ s.textContent = "هادي · ما فيه شغل مفتوح"; return; }
+        if(c[0]) s.appendChild(el("em", null, c[0] + " ينتظرونك")); if(c[0] && c[1]) s.appendChild(document.createTextNode(" · ")); if(c[1]) s.appendChild(document.createTextNode(c[1] + " يشتغلون الحين")); };
+      shot.appendChild(fl);
+    });
+    [].forEach.call(shot.querySelectorAll(".fl"), function(n){ n._fill(); });
+    var t = el("div", "ttl"), h = el("h1", "d"); h.appendChild(document.createTextNode("مكتب الإدارة")); h.appendChild(el("em", null, ".")); t.appendChild(h);
+    t.appendChild(el("p", null, "٥ طوابق · ٤ مكاتب · نيويورك"));
+    var big = el("div", "big"), w = el("div", "w"), b = el("div", "b");
+    w.appendChild(el("b", "d", String(tw))); w.appendChild(el("span", null, "ينتظرون قرارك")); b.appendChild(el("b", "d", String(tb))); b.appendChild(el("span", null, "يشتغلون الحين"));
+    big.appendChild(w); big.appendChild(b); t.appendChild(big);
+    if(syncTxt) t.appendChild(el("small", null, syncTxt));
+    shot.appendChild(t);
+    shot._dur = 11000;
+    return shot;
+  }
+
+  /* ---------- an office ---------- */
+  var ORDER = { w: 0, b: 1, h: 2, i: 3 };
+  function officeShot(o){
+    var k = o.k, shot = el("div", "shot office"), pp = PEOPLE[k] || [];
+    var list = (o.a || []).slice(0, 9), used = [];
+    list.forEach(function(a){ if(a[6] != null && a[6] >= 0 && pp[a[6]]) used.push(pp[a[6]]); });
+    var cx = 0, cy = 0; (used.length ? used : pp).forEach(function(p){ cx += p[0]; cy += p[1]; }); var n0 = (used.length ? used : pp).length || 1;
+    var r = render(k + ".jpg", [10, 40, 1400], [cx / n0, cy / n0], 1.14), kb = r._kb;
+    shot.appendChild(r);
+    // the panel: everyone in the office and what they are on
+    var op = el("aside", "op"), h = el("h2", "d"); h.appendChild(el("i")); h.appendChild(document.createTextNode(o.n || off(k)[0])); op.appendChild(h);
+    op.appendChild(el("p", "sub", o.s || off(k)[2]));
+    var c = o.c || [0, 0, 0], cnt = el("div", "cnt");
+    [["w", c[0], "ينتظرونك"], ["b", c[1], "يشتغلون"], ["d", c[2], "خلصت"]].forEach(function(x){ var q = el("div", x[0]); q.appendChild(el("b", "d", String(x[1]))); q.appendChild(el("span", null, x[2])); cnt.appendChild(q); });
+    op.appendChild(cnt);
+    var ul = el("ul", "rows"), talkers = [];
+    list.forEach(function(a){
+      var st = a[1] || "i", li = el("li", st), nm = el("b", null, a[0]);
+      if(a[3]) li.appendChild(el("em", null, a[3]));
+      li.appendChild(nm); li.appendChild(el("span", null, a[2] || (st === "i" ? "متاح" : "")));
+      ul.appendChild(li);
+      var tag = null, sp = a[6] != null && a[6] >= 0 ? pp[a[6]] : null;
+      if(sp){
+        tag = el("div", "tg " + st); tag.style.left = (sp[0] / IW * 100).toFixed(2) + "%"; tag.style.top = ((sp[1] - 34) / IH * 100).toFixed(2) + "%";
+        var stem = el("b", "stem"), sh = sp[2] || 54; stem.style.height = sh + "px";
+        tag.appendChild(el("i", "pin")); tag.appendChild(stem);
+        var lb = el("div", "lb"), lbb = el("b"), lbs = el("span");
+        lbb.textContent = a[0]; lb.appendChild(lbb);
+        if(st === "b"){ var dt = el("span", "dots"); dt.appendChild(el("i")); dt.appendChild(el("i")); dt.appendChild(el("i")); lbs.appendChild(dt); }
+        lbs.appendChild(document.createTextNode(a[2] || (st === "i" ? "متاح" : "")));
+        lb.appendChild(lbs); lb.style.bottom = (sh + 4) + "px"; lb.style.animationDelay = (.8 + talkers.length * .2) + "s"; tag.appendChild(lb); kb.appendChild(tag);
+      }
+      if(st !== "i" && (a[5] || a[2])) talkers.push({ li: li, tag: tag, st: st, name: a[0], say: a[5] || ((st === "w" ? "أنتظر قرارك في: " : st === "h" ? "واقف: " : "أشتغل الحين على: ") + a[2]) });
+    });
+    op.appendChild(ul);
+    if(o.x) op.appendChild(el("p", "x", "+" + o.x + " يشتغلون على مهام ثانية"));
+    if(o.note) op.appendChild(el("p", "x", o.note));
+    if(syncTxt) op.appendChild(el("p", "s", syncTxt));
+    shot.appendChild(op);
+    // live captions: the employees speak in turn, like a conversation in the room
+    var cap = el("div", "cap"), capB = el("b"), capP = el("p"); cap.appendChild(capB); cap.appendChild(capP); shot.appendChild(cap);
+    talkers.sort(function(x, y){ return ORDER[x.st] - ORDER[y.st]; });
+    var n = Math.min(talkers.length, 5), ti = 0, stopSay = null, timer = null, per = 5200;
+    function turn(){
+      talkers.forEach(function(t){ t.li.classList.remove("on"); if(t.tag) t.tag.classList.remove("talk"); });
+      if(stopSay) stopSay();
+      var t = talkers[ti % n]; ti++;
+      t.li.classList.add("on"); if(t.tag) t.tag.classList.add("talk");
+      capB.textContent = t.name; cap.classList.add("on");
+      stopSay = speak(capP, t.say.split(/\s+/), 230);
+    }
+    shot._start = function(){ if(n){ setTimeout(function(){ turn(); timer = setInterval(turn, per); }, 1400); } };
+    shot._stop = function(){ clearInterval(timer); if(stopSay) stopSay(); };
+    shot._dur = n ? 1400 + per * n + 600 : 9000;
+    return shot;
+  }
+
+  /* ---------- a meeting in the manager's office ---------- */
+  function meetShot(m){
+    var shot = el("div", "shot meet"), k = m.o, p = m.p || {};
+    var room = render("hq.jpg", [10, 30, 1400], PEOPLE.hq[0], 1.1); room.className += " room"; shot.appendChild(room);
+    // the presenter, live on camera from their own office
+    var pr = el("aside", "pres talking"), cam = el("div", "cam"), ci = el("div", "cam-i");
+    var spec = p.cam || [k, 0], src = spec[0] || "hq", who = (PEOPLE[src] || PEOPLE.hq)[spec[1] || 0] || PEOPLE.hq[0];
+    var cw = 430, ch = cw * 372 / 470, sc = 470 / cw;      // the crop around the person, in image pixels
+    ci.style.backgroundImage = 'url("' + IMG + src + '.jpg")';
+    ci.style.backgroundSize = Math.round(IW * sc) + "px " + Math.round(IH * sc) + "px";
+    ci.style.backgroundPosition = Math.round(-(who[0] - cw / 2) * sc) + "px " + Math.round(-(who[1] - ch * .3) * sc) + "px";
+    ci.style.transformOrigin = "50% 32%";
+    cam.appendChild(ci);
+    var oa = el("div", "oa"), bars = el("span", "bars"); for(var i = 0; i < 4; i++) bars.appendChild(el("i"));
+    oa.appendChild(bars); var oat = el("span", null, "يعرض الآن"); oa.appendChild(oat); cam.appendChild(oa);
+    var lt = el("div", "lt"); lt.appendChild(el("b", "d", p.n || "")); var lts = el("span"); lts.appendChild(document.createTextNode(p.r || "")); if(k){ lts.appendChild(document.createTextNode(" · ")); lts.appendChild(el("em", null, off(k)[0])); } lt.appendChild(lts); cam.appendChild(lt);
+    pr.appendChild(cam);
+    var say = el("div", "say"); pr.appendChild(say); shot.appendChild(pr);
+    // the room's screen
+    var scr = el("article", "scr"), lbl = el("div", "s-lbl");
+    if(m.q){ lbl.appendChild(el("b", null, "سؤالك")); lbl.appendChild(el("span", null, m.q)); }
+    else { lbl.appendChild(el("b", null, m.g ? "ينتظر قرارك" : "على الطاولة")); lbl.appendChild(el("span", null, (k ? off(k)[0] : "مكتب الإدارة") + (m.g ? " · بوابة " + m.g : ""))); }
+    scr.appendChild(lbl);
+    scr.appendChild(el("h1", "s-title d", m.t || ""));
+    if(m.s) scr.appendChild(el("p", "s-sub", m.s));
+    var delay = 1.1;
+    if(m.f && m.f.length){
+      var fg = el("div", "facts");
+      m.f.slice(0, 6).forEach(function(f){ var c = el("div", "fact" + (f[2] ? " hot" : "")); c.style.animationDelay = (delay += .22).toFixed(2) + "s"; c.appendChild(el("span", null, f[0])); c.appendChild(el("b", null, f[1])); fg.appendChild(c); });
+      scr.appendChild(fg);
+    }
+    if(m.b && m.b.length){
+      var ul = el("ul", "pts"); delay += .5;
+      m.b.slice(0, 4).forEach(function(t){ var li = el("li", null, t); li.style.animationDelay = (delay += .35).toFixed(2) + "s"; ul.appendChild(li); });
+      scr.appendChild(ul);
+    }
+    if(m.ask){ var dc = el("div", "decide"); dc.style.animationDelay = (delay + .6).toFixed(2) + "s"; dc.appendChild(el("b", null, "المطلوب منك")); dc.appendChild(el("span", null, m.ask)); if(m.g) dc.appendChild(el("em", null, m.g)); scr.appendChild(dc); }
+    shot.appendChild(scr);
+    // who else is in the meeting: the office's section heads
+    if(k && HEADS[k]){
+      var att = el("div", "att"); att.appendChild(el("span", null, "الحضور:"));
+      HEADS[k].forEach(function(hd){ att.appendChild(el("i", hd[0] === p.team || hd[0] === p.seat ? "on" : "", hd[1])); });
+      shot.appendChild(att);
+    }
+    var words = (m.say || "").split(/\s+/).filter(Boolean), stopSay = null;
+    shot._fit = function(){ if(scr.scrollHeight > scr.clientHeight + 2) scr.className += " tight"; if(scr.scrollHeight > scr.clientHeight + 2) scr.className += " tighter"; };
+    shot._start = function(){ setTimeout(function(){ stopSay = speak(say, words, 330, function(){ pr.classList.remove("talking"); oat.textContent = "خلص العرض"; }); }, 900); };
+    shot._stop = function(){ if(stopSay) stopSay(); };
+    shot._dur = Math.min(Math.max(900 + words.length * 330 + 8500, 16000), 48000);
+    return shot;
+  }
+
+  /* ---------- the ticker ---------- */
+  function buildTicker(){
+    var t = $("tickt"), parts = [];
+    (d.o || []).forEach(function(o){ (o.a || []).forEach(function(a){ if(a[1] === "w" || a[1] === "b") parts.push([off(o.k)[1], a[0], a[2], a[1] === "w"]); }); });
+    (d.tk || []).forEach(function(x){ parts.push(["", "", x, false]); });
+    if(!parts.length) parts.push(["", "", "المكاتب هادية، ما فيه شغل مفتوح", false]);
+    function copy(){
+      var f = document.createDocumentFragment();
+      parts.forEach(function(x){
+        var s = el("span"); if(x[0]) s.appendChild(el("b", null, x[0] + " · " + x[1] + ": "));
+        s.appendChild(document.createTextNode(x[2])); if(x[3]) s.appendChild(el("em", null, " — ينتظر قرارك"));
+        f.appendChild(s); f.appendChild(el("i", "sep"));
+      });
+      return f;
+    }
+    t.textContent = "";
+    var w = $("tickw").offsetWidth || 1200, k = 0;
+    do { t.appendChild(copy()); k++; } while(t.offsetWidth < w + 200 && k < 12);
+    var one = t.offsetWidth; for(var j = 0; j < k; j++) t.appendChild(copy());
+    // Arabic tickers move to the right: the text slides in from the left edge
+    var kf = $("tickkf") || document.head.appendChild(el("style")); kf.id = "tickkf";
+    kf.textContent = "@keyframes tick{from{-webkit-transform:translateX(" + (-one) + "px);transform:translateX(" + (-one) + "px)}to{-webkit-transform:translateX(0);transform:translateX(0)}}";
+    t.style.animation = "tick " + Math.round(one / 85) + "s linear infinite";
+  }
+
+  /* ---------- the director ---------- */
+  var shots = [], q = d.m || [];
+  if(d.focus != null && d.focus >= 0 && q[d.focus]) shots.push({ k: "meet", m: q[d.focus] });
+  shots.push({ k: "building" });
+  (d.o || []).forEach(function(o){ if(OFFICES[o.k]) shots.push({ k: "office", o: o }); });
+  q.forEach(function(m, i){ if(i !== d.focus) shots.push({ k: "meet", m: m }); });
+
+  var params = {}; location.search.replace(/[?&]([^=&]+)=([^&]*)/g, function(_, a, b){ params[a] = b; });
+  var idx = -1, cur = null, timer = null, paused = params.hold === "1";
+  function label(s){ return s.k === "building" ? "المبنى · كل المكاتب" : s.k === "office" ? "المكتب · " + (s.o.n || off(s.o.k)[0]) : "اجتماع · مكتب المدير"; }
+  function make(s){ return s.k === "building" ? buildingShot() : s.k === "office" ? officeShot(s.o) : meetShot(s.m); }
+  function show(i){
+    idx = (i + shots.length) % shots.length;
+    var s = shots[idx], node = make(s);
+    $("shots").appendChild(node); void node.offsetWidth; node.classList.add("on");
+    if(cur){ var old = cur; old.classList.remove("on"); if(old._stop) old._stop(); setTimeout(function(){ if(old.parentNode) old.parentNode.removeChild(old); }, 1100); }
+    cur = node; if(node._fit) node._fit(); if(node._start) node._start();
+    $("chip").lastChild.textContent = label(s);
+    var nx = shots[(idx + 1) % shots.length], nn = $("next"); nn.textContent = ""; nn.appendChild(document.createTextNode("التالي: "));
+    nn.appendChild(el("b", null, label(nx) + (nx.k === "meet" && nx.m.p ? " · " + nx.m.p.n : "")));
+    var pg = $("prog"); pg.style.transition = "none"; pg.style.width = "0"; void pg.offsetWidth;
+    clearTimeout(timer);
+    if(!paused){ pg.style.transition = "width " + node._dur + "ms linear"; pg.style.width = "100%"; timer = setTimeout(function(){ show(idx + 1); }, node._dur); }
+    document.title = label(s) + " · قناة الشركة";
+  }
+  function setPaused(v){
+    paused = v; $("live").className = "live" + (v ? " paused" : ""); $("live").lastChild.textContent = v ? "متوقف" : "مباشر";
+    if(v){ clearTimeout(timer); $("prog").style.transition = "none"; } else show(idx);
+  }
+  window.addEventListener("keydown", function(e){
+    var c = e.keyCode;
+    if(c === 37){ show(idx + 1); e.preventDefault(); }        // left: forward, the reading direction
+    else if(c === 39){ show(idx - 1); e.preventDefault(); }   // right: back
+    else if(c === 13 || c === 415 || c === 19 || c === 10252){ setPaused(!paused); e.preventDefault(); }
+  });
+  buildTicker();
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(buildTicker);
+  show(parseInt(params.shot, 10) || 0);
+  if(paused) setPaused(true);
+})();
+</script>
+</body>
+</html>

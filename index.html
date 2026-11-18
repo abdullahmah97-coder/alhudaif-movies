@@ -334,8 +334,8 @@ footer a{color:var(--muted)}
   <div class="panel settings">
     <h2 id="sTitle">الإعدادات</h2>
     <div>
-      <h3>مفتاح TMDB</h3>
-      <ol class="steps">
+      <h3 id="keyTitle">مفتاح TMDB</h3>
+      <ol class="steps" id="keySteps">
         <li>سجّل حساب مجاني في <span class="mono">themoviedb.org</span>.</li>
         <li>من <span class="mono">Settings</span> افتح <span class="mono">API</span> واطلب مفتاح للاستخدام الشخصي.</li>
         <li>انسخ <span class="mono">API Key</span> (٣٢ خانة) والصقه هنا.</li>
@@ -347,7 +347,7 @@ footer a{color:var(--muted)}
       <button class="btn btn-ghost" id="clearKey" data-nav type="button">امسح</button>
     </div>
     <p class="msg" id="keyMsg" role="status"></p>
-    <p class="hint">المفتاح ينحفظ في متصفح هالجهاز فقط، وما ينرسل لأي مكان غير TMDB.</p>
+    <p class="hint" id="keyHint">المفتاح ينحفظ في متصفح هالجهاز فقط، وما ينرسل لأي مكان غير TMDB.</p>
     <div>
       <h3>اشتراكاتي</h3>
       <p class="hint" style="margin-bottom:10px">اختر المنصات اللي مشترك فيها، وتطلع لك صفوفها في الرئيسية، ونعلّم الأعمال اللي تقدر تشوفها بدون دفع زيادة.</p>
@@ -361,6 +361,8 @@ footer a{color:var(--muted)}
 (function(){
   "use strict";
   const API = "https://api.themoviedb.org/3";
+  // Shared server (Supabase Edge Function flix-tmdb) that holds the TMDB key, so people use the app with no key.
+  const PROXY = "https://hfplqbnbuskiaeblxpfo.supabase.co/functions/v1/flix-tmdb";
   const IMG = "https://image.tmdb.org/t/p/";
   const REGION = "SA", LANG = "ar-SA";
   const ON_PLATFORM = "flatrate|free|ads";
@@ -462,14 +464,27 @@ footer a{color:var(--muted)}
   const q = $("#q");
 
   /* ---------- TMDB ---------- */
+  // Data comes through the shared server, or straight from TMDB when someone saved their own key.
+  let proxyOk = false, proxyCheck = null;
+  function checkProxy(){
+    if(proxyOk) return Promise.resolve(true);
+    if(!proxyCheck) proxyCheck = fetch(PROXY + "/health")
+      .then(r => r.ok ? r.json() : null)
+      .then(j => (proxyOk = !!(j && j.ok)), () => false)
+      .then(ok => { proxyCheck = null; return ok; });
+    return proxyCheck;
+  }
+  async function ready(){ return !!apiKey || await checkProxy(); }
   async function tmdb(path, params){
-    if(!apiKey) throw {code:"nokey"};
-    const url = new URL(API + path);
+    const own = !!apiKey;
+    if(!own && !(await checkProxy())) throw {code:"nokey"};
+    const url = new URL((own ? API : PROXY + "/3") + path);
     Object.entries(params || {}).forEach(([k,v]) => url.searchParams.set(k, v));
     const headers = {accept:"application/json"};
-    if(apiKey.length > 40) headers.Authorization = "Bearer " + apiKey; else url.searchParams.set("api_key", apiKey);
+    if(own){ if(apiKey.length > 40) headers.Authorization = "Bearer " + apiKey; else url.searchParams.set("api_key", apiKey); }
     let res;
     try{ res = await fetch(url.toString(), {headers}); }catch(e){ throw {code:"net"}; }
+    if(!own && res.status === 503){ proxyOk = false; throw {code:"nokey"}; }
     if(res.status === 401) throw {code:"auth"};
     if(res.status === 429) throw {code:"rate"};
     if(!res.ok) throw {code:"http", status:res.status};
@@ -681,8 +696,8 @@ footer a{color:var(--muted)}
 
   async function viewHome(){
     const my = beginView("home", "#homeView"); heroMode(true);
-    if(!apiKey){ heroWelcome(); return; }
     heroLoading();
+    if(!(await ready())){ if(my === seq) heroWelcome(); return; }
     let provs = [];
     try{ provs = await loadProviders(); }catch(e){}
     if(my !== seq) return;
@@ -703,8 +718,8 @@ footer a{color:var(--muted)}
 
   async function viewType(type){
     const my = beginView(type, "#homeView"); heroMode(true);
-    if(!apiKey){ heroWelcome(); return; }
     heroLoading();
+    if(!(await ready())){ if(my === seq) heroWelcome(); return; }
     const label = type === "movie" ? "أفلام" : "مسلسلات";
     row(label + " رائجة هالأسبوع", async () => {
       const d = await tmdb("/trending/" + type + "/week", {language:LANG});
@@ -731,7 +746,7 @@ footer a{color:var(--muted)}
   async function viewPlatforms(){
     const my = beginView("platforms", "#platformsView");
     const grid = $("#platGrid"); grid.textContent = "";
-    if(!apiKey){ $("#platSub").textContent = errText({code:"nokey"}); return; }
+    if(!(await ready())){ if(my === seq) $("#platSub").textContent = errText({code:"nokey"}); return; }
     const group = (title, note, list, region) => {
       if(!list.length) return;
       const g = el("div", {class:"plat-grid"});
@@ -825,7 +840,7 @@ footer a{color:var(--muted)}
   async function viewSearch(text){
     const term = text.trim();
     if(!term){ viewHome(); return; }
-    if(!apiKey){ openSettings(); return; }
+    if(!(await ready())){ openSettings(); return; }
     const my = beginView("search", "#listView");
     $("#filters").hidden = false;
     $("#listTitle").textContent = "نتائج «" + term + "»"; $("#listSub").textContent = "ندوّر…";
@@ -844,7 +859,7 @@ footer a{color:var(--muted)}
     }catch(e){ if(my === seq) $("#listSub").textContent = errText(e); }
   }
   async function viewMine(){
-    if(!apiKey){ openSettings(); return; }
+    if(!(await ready())){ openSettings(); return; }
     const my = beginView("mine", "#listView");
     $("#filters").hidden = true; filter = "all";
     $("#listTitle").textContent = "متاح في اشتراكاتك";
@@ -964,7 +979,20 @@ footer a{color:var(--muted)}
     $("#settingsSheet").hidden = false; document.body.style.overflow = "hidden";
     const ki = $("#keyInput"); ki.value = apiKey;
     $("#keyMsg").textContent = apiKey ? "فيه مفتاح محفوظ." : ""; $("#keyMsg").className = "msg" + (apiKey ? " ok" : "");
-    ki.focus(); if(apiKey) renderSubs();
+    const shared = !apiKey && proxyOk;
+    keyMode(shared);
+    (shared ? $("#closeSettings") : ki).focus();
+    ready().then(ok => {
+      if(!ok || $("#settingsSheet").hidden) return;
+      if(!apiKey && !shared) keyMode(true);
+      renderSubs();
+    });
+  }
+  // With the shared server working, a key is optional: hide the steps and say so.
+  function keyMode(shared){
+    $("#keySteps").hidden = shared; $("#keyHint").hidden = shared;
+    $("#keyTitle").textContent = shared ? "مفتاحك الخاص (اختياري)" : "مفتاح TMDB";
+    if(shared){ $("#keyMsg").className = "msg ok"; $("#keyMsg").textContent = "ما تحتاج مفتاح، التطبيق شغّال من سيرفر حضيف فليكس."; }
   }
   function closeSettings(){
     $("#settingsSheet").hidden = true; document.body.style.overflow = "";
@@ -995,6 +1023,7 @@ footer a{color:var(--muted)}
     $("#keyInput").value = ""; $("#keyMsg").className = "msg"; $("#keyMsg").textContent = "انمسح المفتاح من هالجهاز.";
     $("#subs").textContent = ""; $("#subs").appendChild(el("p", {class:"hint", text:"حط المفتاح أول عشان تطلع قائمة المنصات في السعودية."}));
     subsChanged = true;
+    ready().then(ok => { if(ok && !apiKey){ keyMode(true); renderSubs(); } });
   }
   async function renderSubs(){
     const box = $("#subs"); box.textContent = ""; box.appendChild(el("div", {class:"skel", style:"aspect-ratio:auto;height:44px;flex:0 0 220px"}));

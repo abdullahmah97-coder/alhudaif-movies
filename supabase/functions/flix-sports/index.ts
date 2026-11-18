@@ -199,7 +199,8 @@ Deno.serve(async (req) => {
   if (hit && Date.now() - hit.at < hit.ttl * 1000) return reply(200, hit.body, hit.ttl);
 
   const data = await matchesFor(date);
-  const ttl = data.live ? 30 : date === today ? 60 : date < today ? 1800 : 900;
+  // An empty day may just be ESPN failing for a moment, so browsers keep it only briefly.
+  const ttl = data.live || !data.leagues.length ? (data.live ? 30 : 60) : date === today ? 60 : date < today ? 1800 : 900;
   const body = JSON.stringify(data);
   if (cache.size > 60) cache.clear();
   cache.set(date, { at: Date.now(), ttl, body });

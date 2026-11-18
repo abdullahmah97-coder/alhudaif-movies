@@ -28,6 +28,7 @@
   --latin:"Cinzel","Times New Roman",serif;
   --ok:#5fd394;          /* in your subscriptions */
   --warn:#f08a6e;
+  --live:#ff5a4f;        /* live matches */
   --font:"IBM Plex Sans Arabic","Segoe UI",Tahoma,Arial,sans-serif;
   --gut:max(16px,4vw);
   color-scheme:dark;
@@ -136,30 +137,96 @@ main{position:relative;z-index:2;margin-top:clamp(-80px,-4vw,-30px);display:grid
 .chips{display:flex;gap:8px;flex-wrap:wrap}
 .chip{background:transparent;border:1.5px solid var(--line);border-radius:999px;padding:.3em 1em;cursor:pointer;color:var(--muted);font-weight:500}
 .chip[aria-pressed="true"]{background:var(--text);color:#090806;border-color:var(--text);font-weight:700}
-/* matches */
-.m-league{display:grid;gap:12px;margin-bottom:clamp(20px,2vw,36px)}
-.m-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.m-head img{width:36px;height:36px;object-fit:contain;background:#fff;border-radius:9px;padding:3px}
-.m-head h3{margin-top:0;margin-bottom:0;font-size:clamp(18px,1.35vw,26px);font-weight:700}
-.m-tv{color:var(--gold);font-weight:600;font-size:.92em}
-.m-head .btn{margin-inline-start:auto}
-.m-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(290px,23vw,440px),1fr));gap:clamp(10px,.9vw,16px)}
-.match{all:unset;box-sizing:border-box;display:block;padding:16px;background:var(--bg-2);border:1.5px solid var(--line);border-radius:12px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
-.match:hover,.match:focus-visible{border-color:var(--gold);outline:none;box-shadow:0 0 0 3px rgba(217,178,111,.35)}
-.m-in{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
-.team{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;min-width:0}
-.team img,.team i{width:clamp(42px,3vw,58px);height:clamp(42px,3vw,58px);object-fit:contain;filter:drop-shadow(0 0 1px rgba(255,255,255,.35))}
-.team b{font-weight:600;font-size:clamp(14px,.95vw,18px);line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.team.win b{color:var(--gold-hi)}
-.mid{display:grid;justify-items:center;gap:4px;min-width:96px}
-.score{display:flex;align-items:baseline;gap:.4em;font-size:clamp(24px,1.9vw,36px);font-weight:700;font-variant-numeric:tabular-nums}
-.score small{font-size:.5em;color:var(--muted);margin-inline-start:2px}
-.ktime{font-size:clamp(19px,1.35vw,27px);font-weight:700}
-.mlabel{font-size:.86em;color:var(--muted);white-space:nowrap}
-.mlabel.live{color:#ff6b5e;font-weight:700}
-.mlabel.live::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff6b5e;margin-inline-end:6px;vertical-align:middle;animation:livepulse 1.2s infinite}
+/* matches: page head, day strip, league filter, live block, league sections of fixture cards */
+.mx{gap:clamp(16px,1.5vw,26px)}
+.mx-top{display:flex;align-items:flex-end;justify-content:space-between;gap:10px 16px;flex-wrap:wrap}
+.mx-title h2{margin:0;font-size:clamp(26px,2.3vw,46px);font-weight:800;line-height:1.15}
+.mx-title p{margin:6px 0 0;color:var(--muted)}
+.mx-live{display:inline-flex;align-items:center;gap:8px;padding:.35em 1em;border-radius:999px;background:rgba(255,90,79,.12);border:1.5px solid rgba(255,90,79,.5);color:#ff8f86;font-weight:700;white-space:nowrap}
+.mx-dot,.mx-live i{display:inline-block;flex:none;width:.55em;height:.55em;border-radius:50%;background:var(--live);animation:livepulse 1.2s infinite}
+.mx-days,.mx-chips{display:flex;overflow-x:auto;scrollbar-width:none;padding:10px;margin:-10px;scroll-snap-type:x proximity}
+.mx-day,.mx-chip,.fx{scroll-margin-top:120px;scroll-margin-bottom:24px}
+.mx-days{gap:clamp(8px,.7vw,14px)}
+.mx-chips{gap:8px}
+.mx-days::-webkit-scrollbar,.mx-chips::-webkit-scrollbar{display:none}
+.mx-day{all:unset;box-sizing:border-box;position:relative;flex:1 0 clamp(80px,6.8vw,132px);display:flex;flex-direction:column;align-items:center;gap:2px;padding:.6em .4em .65em;border-radius:16px;background:var(--bg-2);border:1.5px solid var(--line);cursor:pointer;text-align:center;scroll-snap-align:center;transition:background .15s,border-color .15s,box-shadow .15s}
+.mx-day small{font-size:.78em;font-weight:600;color:var(--muted);white-space:nowrap}
+.mx-day b{font-size:1.7em;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.mx-day em{font-style:normal;font-size:.7em;color:var(--muted);white-space:nowrap}
+.mx-day.is-today small{color:var(--gold)}
+.mx-day.is-none{opacity:.5}
+.mx-day.is-live::after{content:"";position:absolute;top:10px;inset-inline-end:10px;width:8px;height:8px;border-radius:50%;background:var(--live);animation:livepulse 1.2s infinite}
+.mx-day:hover,.mx-chip:hover{border-color:#4a4032}
+.mx-day[aria-pressed="true"]{background:var(--gold-grad);border-color:transparent;color:var(--gold-ink);opacity:1}
+.mx-day[aria-pressed="true"] small,.mx-day[aria-pressed="true"] em{color:rgba(23,15,4,.75)}
+.mx-chip{all:unset;box-sizing:border-box;flex:none;display:inline-flex;align-items:center;gap:8px;padding:.32em .95em;border-radius:999px;border:1.5px solid var(--line);background:rgba(27,24,19,.7);color:#d8d3c9;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,box-shadow .15s}
+.mx-chip img{width:1.4em;height:1.4em;object-fit:contain;background:#fff;border-radius:50%;padding:2px}
+.mx-chip em{font-style:normal;font-size:.78em;font-weight:700;color:var(--muted);background:rgba(255,255,255,.08);border-radius:999px;padding:0 .5em}
+.mx-chip[aria-pressed="true"]{background:var(--text);border-color:var(--text);color:#090806}
+.mx-chip[aria-pressed="true"] em{background:rgba(9,8,6,.12);color:#090806}
+.mx-day:focus-visible,.mx-chip:focus-visible{outline:none;box-shadow:0 0 0 3px var(--bg),0 0 0 6px var(--gold)}
+.mx-list{display:grid;gap:clamp(28px,2.6vw,48px)}
+.mx-lg{display:grid;gap:clamp(12px,1vw,18px)}
+.mx-lgh{display:flex;align-items:center;gap:clamp(10px,.9vw,16px);padding-bottom:clamp(10px,.8vw,14px);border-bottom:1px solid var(--line)}
+.mx-lgl{flex:none;display:grid;place-items:center;width:clamp(42px,3.1vw,60px);height:clamp(42px,3.1vw,60px);padding:6px;border-radius:14px;background:#fff;box-shadow:0 6px 18px rgba(0,0,0,.35);color:var(--gold)}
+.mx-lgl img,.mx-lgl svg{width:100%;height:100%;object-fit:contain}
+.mx-lgl.is-blank,.mx-lg.is-live .mx-lgl{background:rgba(255,255,255,.06);box-shadow:none;padding:10px}
+.mx-lg.is-live .mx-lgl{background:rgba(255,90,79,.14)}
+.mx-lg.is-live .mx-dot{width:16px;height:16px}
+.mx-lgt{flex:1;min-width:0}
+.mx-lgt h3{margin-top:0;margin-bottom:0;font-size:clamp(18px,1.45vw,29px);font-weight:700;line-height:1.25}
+.mx-lgt span{display:block;color:var(--muted);font-size:.8em}
+.mx-lg.is-live h3{color:#ff8f86}
+.mx-tvb{flex:none;display:inline-flex;align-items:center;gap:8px;padding:.45em 1.05em;border-radius:999px;border:1.5px solid rgba(217,178,111,.55);color:var(--gold-hi);font-weight:700;font-size:.9em;text-decoration:none;white-space:nowrap;transition:background .15s,color .15s,box-shadow .15s}
+.mx-tvb svg{width:1.15em;height:1.15em;flex:none}
+.mx-tvb:hover{background:rgba(217,178,111,.12)}
+.mx-tvb:focus-visible{outline:none;background:var(--gold-grad);color:var(--gold-ink);border-color:transparent;box-shadow:0 0 0 3px var(--bg),0 0 0 6px var(--gold)}
+.mx-note{margin:0;color:var(--muted);font-size:.86em}
+.fx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(300px,24vw,460px),1fr));gap:clamp(10px,.9vw,16px)}
+.fx{all:unset;box-sizing:border-box;position:relative;display:flex;flex-direction:column;overflow:hidden;border-radius:16px;border:1.5px solid var(--line);background:linear-gradient(180deg,#1a1611,#13110d 70%);cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .15s}
+.fx::before{content:"";position:absolute;top:18px;bottom:18px;inset-inline-start:0;width:3px;border-radius:3px;background:transparent}
+.fx.is-live{border-color:rgba(255,90,79,.5);background:linear-gradient(180deg,rgba(255,90,79,.13),rgba(255,90,79,0) 60%),#14110d}
+.fx.is-live::before{background:var(--live)}
+.fx.is-soon::before{background:var(--gold)}
+.fx.is-off{opacity:.7}
+.fx:hover{border-color:#4a4032;transform:translateY(-2px)}
+.fx:focus-visible{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px var(--bg),0 0 0 6px var(--gold),0 16px 36px rgba(0,0,0,.55);transform:translateY(-2px)}
+.fx-in{flex:1 0 auto;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:start;gap:8px;padding:clamp(16px,1.2vw,22px) clamp(12px,1vw,18px) clamp(12px,1vw,18px)}
+.fx-tm{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;text-align:center}
+.fx-logo{display:grid;place-items:center;width:clamp(56px,4vw,76px);height:clamp(56px,4vw,76px);border-radius:50%;background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.14),rgba(255,255,255,.03) 72%)}
+.fx-logo img{width:68%;height:68%;object-fit:contain;filter:drop-shadow(0 0 1px rgba(255,255,255,.5))}
+.fx-tm b{font-weight:700;font-size:clamp(14px,.95vw,19px);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.fx-tm small{font-size:.74em;color:var(--muted);font-variant-numeric:tabular-nums}
+.fx-tm.win b{color:var(--gold-hi)}
+.fx-tm.lose{opacity:.55}
+.fx-c{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:clamp(96px,7vw,132px);padding-top:clamp(14px,1.05vw,20px)}
+.fx-kt{font-size:clamp(22px,1.65vw,33px);font-weight:800;line-height:1.1;white-space:nowrap}
+.fx-sc{display:flex;align-items:center;gap:.3em;font-size:clamp(30px,2.2vw,44px);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.fx-sc i{font-style:normal;font-weight:500;color:var(--muted)}
+.fx-pen{display:flex;gap:4px;font-size:.74em;color:var(--muted);white-space:nowrap}
+.fx-st{display:inline-block;padding:.14em .75em;border-radius:999px;font-size:.78em;font-weight:700;white-space:nowrap;background:rgba(255,255,255,.07);color:#cfc6b4}
+.fx-st.live{background:rgba(255,90,79,.16);color:#ff8f86}
+.fx-st.live::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--live);margin-inline-end:6px;vertical-align:middle;animation:livepulse 1.2s infinite}
+.fx-st.soon{background:rgba(217,178,111,.14);color:var(--gold-hi)}
+.fx-ft{display:flex;align-items:center;gap:8px;padding:.6em clamp(14px,1.1vw,20px);border-top:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.22);color:var(--muted);font-size:.8em}
+.fx-ft svg{width:1.15em;height:1.15em;flex:none;color:var(--gold)}
+.fx-ft span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fx-ft .fx-lgn{margin-inline-start:auto;color:#cfc6b4;font-weight:600}
+.fx.is-post .fx-ft{opacity:.75}
+.fx:hover .fx-ft,.fx:focus-visible .fx-ft{background:rgba(217,178,111,.13);color:var(--gold-hi);opacity:1}
 @keyframes livepulse{50%{opacity:.25}}
-.m-empty{color:var(--muted);padding:24px 0;margin:0}
+.mx-skel{display:grid;gap:clamp(12px,1vw,18px)}
+.sk-h,.sk-fx{border-radius:16px;background:linear-gradient(90deg,#16130f,#221e17,#16130f);background-size:200% 100%;animation:sh 1.3s linear infinite}
+.sk-h{height:clamp(44px,3.2vw,60px);width:60%;max-width:440px}
+.sk-fx{height:clamp(160px,10.5vw,200px)}
+.mx-empty{display:flex;flex-direction:column;align-items:center;text-align:center;padding:clamp(30px,3.2vw,60px) 18px;border:1.5px dashed var(--line);border-radius:20px;color:var(--muted)}
+.mx-empty>*{margin-top:0;margin-bottom:0}
+.mx-empty>*+*{margin-top:12px}
+.mx-empty>svg{width:clamp(42px,3.2vw,60px);height:clamp(42px,3.2vw,60px);color:var(--gold)}
+.mx-empty h3{color:var(--text);font-size:clamp(18px,1.45vw,28px);font-weight:700}
+.mx-empty p{max-width:52ch}
+.mx-empty .btn{margin-top:18px}
+.mx-foot{margin:0;color:var(--muted);font-size:.8em}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(200px,17vw,340px),1fr));gap:clamp(12px,1vw,18px) clamp(10px,.8vw,14px)}
 .grid .tile{flex:none;width:100%}
 .empty{color:var(--muted);margin:0;max-width:60ch}
@@ -272,6 +339,9 @@ footer a{color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.tile:hover,.tile:focus{transform:none}}
 /* ---------- TV app mode ---------- */
 .tv :focus,.tv :focus-visible{outline:4px solid var(--gold);outline-offset:4px}
+.tv .mx-day:focus,.tv .mx-chip:focus,.tv .fx:focus,.tv .mx-tvb:focus{outline:none;box-shadow:0 0 0 4px var(--bg),0 0 0 8px var(--gold)}
+.tv .mx-tvb:focus{background:var(--gold-grad);color:var(--gold-ink);border-color:transparent}
+.tv .fx:focus .fx-ft{background:rgba(217,178,111,.13);color:var(--gold-hi);opacity:1}
 .tv .arrow{display:none}
 .tv ::-webkit-scrollbar{display:none}
 .trailer{position:fixed;inset:0;z-index:80;background:#000;display:flex;flex-direction:column}
@@ -328,12 +398,15 @@ footer a{color:var(--muted)}
 </section>
 
 <!-- MATCHES -->
-<section class="results" id="matchesView" hidden aria-live="polite">
-  <div class="results-head">
-    <div><h2>المباريات</h2><p id="matchSub">المواعيد والنتائج بتوقيت السعودية، والقناة اللي تنقل كل دوري عندنا.</p></div>
-    <div class="chips" id="matchDays" role="group" aria-label="اختر اليوم"></div>
+<section class="results mx" id="matchesView" hidden>
+  <div class="mx-top">
+    <div class="mx-title"><h2>المباريات</h2><p id="mxDate">بتوقيت السعودية</p></div>
+    <span class="mx-live" id="mxLive" hidden><i></i><b id="mxLiveN">0</b><span>مباشر الآن</span></span>
   </div>
-  <div id="matchList"></div>
+  <div class="mx-days" id="matchDays" role="group" aria-label="اختر اليوم"></div>
+  <div class="mx-chips" id="mxChips" role="group" aria-label="اختر الدوري" hidden></div>
+  <div class="mx-list" id="matchList"></div>
+  <p class="mx-foot" id="mxFoot"></p>
 </section>
 
 <!-- SEARCH / LIST VIEW -->
@@ -1033,37 +1106,44 @@ footer a{color:var(--muted)}
 
   /* ---------- matches: fixtures and live scores by league, with the broadcaster in Saudi Arabia ---------- */
   const SPORTS = "https://hfplqbnbuskiaeblxpfo.supabase.co/functions/v1/flix-sports";
-  const RIYADH = "Asia/Riyadh", DAY_MS = 864e5;
-  let matchDay = 0, matchTimer = null;
-  const riyadhDate = off => new Date(Date.now() + 3 * 36e5 + off * DAY_MS).toISOString().slice(0, 10);
-  function dayLabel(off){
-    if(off === 0) return "اليوم";
-    if(off === -1) return "أمس";
-    if(off === 1) return "بكرة";
-    try{ return new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {weekday:"long", day:"numeric", month:"short", timeZone: RIYADH}).format(new Date(Date.now() + off * DAY_MS)); }
-    catch(e){ return riyadhDate(off).slice(5).replace("-", "/"); }
+  // Saudi Arabia is UTC+3 all year, so days and times are worked out here rather than from the TV's locale data.
+  const DAY_MS = 864e5, KSA_MS = 108e5;
+  const WEEKDAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+  const MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+  const TV_ICON = "M3 7h18v12H3zM8 3l4 4 4-4", CAL_ICON = "M5 5h14v15H5zM8 3v4M16 3v4M5 10h14", CUP_ICON = "M7 4h10v4a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8";
+  let matchDay = 0, matchTimer = null, matchData = null, matchLeague = "all", dayInfo = {}, daysAt = 0, daysBusy = false;
+  const ksa = ms => new Date(ms + KSA_MS);              // read with getUTC*: the wall clock in Riyadh
+  const dayOf = off => ksa(Date.now() + off * DAY_MS);
+  const riyadhDate = off => dayOf(off).toISOString().slice(0, 10);
+  const dayName = off => off === 0 ? "اليوم" : off === -1 ? "أمس" : off === 1 ? "بكرة" : WEEKDAYS[dayOf(off).getUTCDay()];
+  const fullDay = off => { const d = dayOf(off); return WEEKDAYS[d.getUTCDay()] + " " + d.getUTCDate() + " " + MONTHS[d.getUTCMonth()]; };
+  const dayTitle = off => (Math.abs(off) <= 1 ? dayName(off) + "، " : "") + fullDay(off);
+  function clock(ms){ const d = ksa(ms), h = d.getUTCHours(), m = d.getUTCMinutes(); return (h % 12 || 12) + ":" + (m < 10 ? "0" : "") + m + (h < 12 ? " ص" : " م"); }
+  const plural = (n, one, two, few, many) => n === 1 ? one : n === 2 ? two : n <= 10 ? n + " " + few : n + " " + many;
+  const games = n => n ? plural(n, "مباراة", "مباراتين", "مباريات", "مباراة") : "ما فيه مباريات";
+  const gameCount = leagues => leagues.reduce((n, l) => n + l.matches.length, 0);
+  function startsIn(ms){
+    const min = Math.round((ms - Date.now()) / 6e4);
+    if(min <= 0) return "تبدأ الحين";
+    if(min < 60) return "بعد " + plural(min, "دقيقة", "دقيقتين", "دقايق", "دقيقة");
+    if(min < 90) return "بعد ساعة";
+    if(min < 120) return "بعد ساعة ونص";
+    const h = Math.floor(min / 60);
+    return h <= 6 ? "بعد " + plural(h, "ساعة", "ساعتين", "ساعات", "ساعة") : "";
   }
-  function kickoff(iso){
-    try{ return new Intl.DateTimeFormat("ar-SA-u-nu-latn", {hour:"numeric", minute:"2-digit", timeZone: RIYADH}).format(new Date(iso)); }
-    catch(e){ return new Date(Date.parse(iso) + 3 * 36e5).toISOString().slice(11, 16); }
-  }
-  function renderDays(){
-    const box = $("#matchDays"), hadFocus = box.contains(document.activeElement);
-    box.textContent = "";
-    for(let off = -1; off <= 5; off++){
-      const b = el("button", {class:"chip", type:"button", "data-nav":true, "aria-pressed": off === matchDay ? "true" : "false", text: dayLabel(off)});
-      b.addEventListener("click", () => { if(off !== matchDay) viewMatches(off); });
-      box.appendChild(b);
-    }
-    if(hadFocus){ const on = box.querySelector('[aria-pressed="true"]'); if(on) on.focus(); }
-  }
-  async function viewMatches(off){
+
+  function viewMatches(off){
     if(typeof off === "number") matchDay = off;
+    const inside = $("#matchesView").contains(document.activeElement);   // a day, the retry or the next-day button
     const my = beginView("matches", "#matchesView");
-    renderDays();
-    const list = $("#matchList"); list.textContent = "";
-    list.appendChild(el("div", {class:"skel", style:"aspect-ratio:auto;height:140px;flex:none"}));
+    clearTimeout(matchTimer); matchData = null;
+    $("#mxDate").textContent = dayTitle(matchDay) + " · بتوقيت السعودية";
+    $("#mxLive").hidden = true; $("#mxChips").hidden = true; $("#mxFoot").textContent = "";
+    renderDays(true);
+    if(inside){ const on = $('#matchDays [aria-pressed="true"]'); if(on) on.focus({preventScroll:true}); }
+    const list = $("#matchList"); list.textContent = ""; list.appendChild(skeleton());
     loadMatches(my, true);
+    if(Date.now() - daysAt > 3e5) loadDays();
   }
   async function loadMatches(my, first){
     clearTimeout(matchTimer);
@@ -1073,45 +1153,179 @@ footer a{color:var(--muted)}
       if(r.ok) data = await r.json();
     }catch(e){}
     if(my !== seq) return;
-    if(!data){
-      if(first){ $("#matchList").textContent = ""; $("#matchList").appendChild(el("p", {class:"m-empty", text:"ما قدرنا نجيب المباريات الحين. نحاول مرة ثانية بعد شوي."})); }
-      matchTimer = setTimeout(() => { if(my === seq) loadMatches(my, first); }, 60000);
+    if(!data || !Array.isArray(data.leagues)){
+      if(first) matchError();
+      matchTimer = setTimeout(() => { if(my === seq) loadMatches(my, first); }, first ? 20000 : 60000);
       return;
     }
-    renderMatches(data);
-    if(matchDay === 0) matchTimer = setTimeout(() => { if(my === seq) loadMatches(my, false); }, data.live ? 30000 : 120000);
+    matchData = data;
+    const n = gameCount(data.leagues), was = dayInfo[data.date];
+    dayInfo[data.date] = {date: data.date, count: n, live: !!data.live};
+    if(!was || was.count !== n || !!was.live !== !!data.live) renderDays(false);
+    renderMatches();
+    if(matchDay === 0 || data.live) matchTimer = setTimeout(() => { if(my === seq) loadMatches(my, false); }, data.live ? 30000 : 120000);
   }
-  function renderMatches(data){
-    const list = $("#matchList"), cur = document.activeElement, keep = cur && cur.dataset ? cur.dataset.mid || cur.dataset.lg : null;
+  // How many matches each day of the strip has; the day on screen keeps the count from its own fresher load.
+  async function loadDays(){
+    if(daysBusy) return;
+    daysBusy = true;
+    try{
+      const r = await fetch(SPORTS + "/days?from=" + riyadhDate(-1) + "&count=7");
+      if(r.ok){
+        const j = await r.json();
+        (j.days || []).forEach(d => { if(!(matchData && matchData.date === d.date)) dayInfo[d.date] = d; });
+        daysAt = Date.now();
+      }
+    }catch(e){}
+    daysBusy = false;
+    if(view === "matches"){ renderDays(false); if(matchData && !matchData.leagues.length) renderMatches(); }
+  }
+
+  function renderDays(center){
+    const box = $("#matchDays"), a = document.activeElement, had = box.contains(a) ? a.dataset.day : null;
+    box.textContent = "";
+    for(let off = -1; off <= 5; off++){
+      const d = dayOf(off), info = dayInfo[riyadhDate(off)];
+      const b = el("button", {class:"mx-day" + (off === 0 ? " is-today" : "") + (info && !info.count ? " is-none" : "") + (info && info.live ? " is-live" : ""),
+        type:"button", "data-nav":true, "data-day": off, "aria-pressed": off === matchDay ? "true" : "false",
+        "aria-label": dayTitle(off) + (info ? "، " + games(info.count) + (info.live ? "، فيه مباريات مباشرة" : "") : "")},
+        [el("small", {text: dayName(off)}), el("b", {text: String(d.getUTCDate())}), el("em", {text: info ? (info.count ? games(info.count) : "ما فيه") : MONTHS[d.getUTCMonth()]})]);
+      b.addEventListener("click", () => { if(off !== matchDay) viewMatches(off); });
+      box.appendChild(b);
+    }
+    if(had != null){ const n = box.querySelector('[data-day="' + had + '"]'); if(n) n.focus({preventScroll:true}); }
+    // On narrow screens the strip scrolls: bring the chosen day to the middle without moving the page.
+    const on = box.querySelector('[aria-pressed="true"]');
+    if(on && center && box.scrollWidth > box.clientWidth + 2){
+      const a = on.getBoundingClientRect(), b = box.getBoundingClientRect();
+      box.scrollLeft += (a.left + a.width / 2) - (b.left + b.width / 2);
+    }
+  }
+  function renderChips(all){
+    const box = $("#mxChips");
+    box.textContent = "";
+    box.hidden = all.length < 2;
+    if(box.hidden) return;
+    const chip = (slug, label, n, logo) => {
+      const b = el("button", {class:"mx-chip", type:"button", "data-nav":true, "data-league": slug, "aria-pressed": matchLeague === slug ? "true" : "false", "aria-label": label + "، " + games(n)},
+        [logo ? el("img", {src: logo, alt:"", loading:"lazy"}) : null, el("span", {text: label}), el("em", {text: String(n)})]);
+      b.addEventListener("click", () => { if(matchLeague !== slug){ matchLeague = slug; renderMatches(); } });
+      return b;
+    };
+    box.appendChild(chip("all", "كل الدوريات", gameCount(all)));
+    all.forEach(l => box.appendChild(chip(l.slug, l.short || l.name, l.matches.length, l.logo)));
+  }
+  // Re-rendering every 30 seconds keeps the remote's place: the same card, chip or day gets the focus back.
+  function focusKey(){
+    const a = document.activeElement;
+    if(!a || !a.dataset || !$("#matchesView").contains(a)) return null;
+    for(const k of ["mid", "league", "day"]) if(a.dataset[k] != null) return [k, a.dataset[k]];
+    return null;
+  }
+  function restoreFocus(key){
+    if(!key) return;
+    const n = $("#matchesView").querySelector("[data-" + key[0] + '="' + key[1] + '"]');
+    if(n && n !== document.activeElement) n.focus({preventScroll:true});
+  }
+  function renderMatches(){
+    const data = matchData;
+    if(!data) return;
+    const keep = focusKey(), list = $("#matchList"), tvs = data.broadcasters || {}, all = data.leagues || [];
+    if(matchLeague !== "all" && !all.some(l => l.slug === matchLeague)) matchLeague = "all";
+    renderChips(all);
+    let nLive = 0;
+    all.forEach(l => l.matches.forEach(m => { if(m.state === "in") nLive++; }));
+    $("#mxLive").hidden = !nLive; $("#mxLiveN").textContent = String(nLive);
     list.textContent = "";
-    const leagues = data.leagues || [], tvs = data.broadcasters || {};
-    if(!leagues.length){
-      list.appendChild(el("p", {class:"m-empty", text: "ما فيه مباريات في هالدوريات " + (matchDay === 0 ? "اليوم" : "هاليوم") + ". اختر يوم ثاني من فوق."}));
-      return;
+    const shown = all.filter(l => matchLeague === "all" || l.slug === matchLeague);
+    if(!shown.length) list.appendChild(emptyDay());
+    else {
+      // Live matches go first, in one block; each league then lists the rest by kick-off.
+      const live = [];
+      shown.forEach(l => l.matches.forEach(m => { if(m.state === "in") live.push(fixture(m, l, tvs[l.tv], true)); }));
+      if(live.length) list.appendChild(leagueBlock({live: true, slug: "live", name: "مباشر الآن", count: live.length}, live, null));
+      shown.forEach(l => {
+        const rest = l.matches.filter(m => m.state !== "in");
+        if(rest.length) list.appendChild(leagueBlock(l, rest.map(m => fixture(m, l, tvs[l.tv], false)), tvs[l.tv] || null));
+      });
     }
-    leagues.forEach(lg => {
-      const tv = tvs[lg.tv] || null;
-      const open = tv ? el("a", {class:"btn btn-ghost", href: tv.web, target:"_blank", rel:"noopener", "data-nav":true, "data-app": tv.app, "data-label": tv.name, "data-lg": lg.slug}, [svg("M8 5v14l11-7z"), "افتح " + tv.name]) : null;
-      const head = el("div", {class:"m-head"}, [lg.logo ? el("img", {src: lg.logo, alt:"", loading:"lazy"}) : null, el("h3", {text: lg.name}), tv ? el("span", {class:"m-tv", text:"تنقلها " + tv.name}) : null, open]);
-      const grid = el("div", {class:"m-grid"});
-      lg.matches.forEach(m => grid.appendChild(matchCard(m, tv)));
-      list.appendChild(el("section", {class:"m-league"}, [head, grid]));
-    });
-    if(keep){ const n = list.querySelector('[data-mid="' + keep + '"],[data-lg="' + keep + '"]'); if(n) n.focus({preventScroll:true}); }
+    $("#mxFoot").textContent = "القنوات حسب حقوق النقل في السعودية لموسم 2026–2027" + (data.updated ? " · آخر تحديث " + clock(Date.parse(data.updated)) : "");
+    restoreFocus(keep);
   }
-  function matchCard(m, tv){
-    const team = (t, win) => el("div", {class:"team" + (win ? " win" : "")}, [t.logo ? el("img", {src: t.logo, alt:"", loading:"lazy"}) : el("i"), el("b", {text: t.name, dir:"auto"})]);
-    const pens = m.home.pens != null && m.away.pens != null;
-    let mid;
-    if(m.state === "pre") mid = [el("span", {class:"ktime", text: kickoff(m.start)}), el("span", {class:"mlabel", text:"بتوقيت السعودية"})];
-    else if(m.state === "off") mid = [el("span", {class:"ktime", text:"–"}), el("span", {class:"mlabel", text: m.label})];
-    else mid = [
-      el("span", {class:"score"}, [el("span", null, [String(m.home.score), pens ? el("small", {text:"(" + m.home.pens + ")"}) : null]), el("span", {text:"-"}), el("span", null, [String(m.away.score), pens ? el("small", {text:"(" + m.away.pens + ")"}) : null])]),
-      el("span", {class:"mlabel" + (m.state === "in" ? " live" : ""), text: m.label})
-    ];
-    const b = el("button", {class:"match", type:"button", "data-nav":true, "data-mid": m.id, "aria-label": m.home.name + " ضد " + m.away.name + (tv ? "، تنقلها " + tv.name : "")}, [el("div", {class:"m-in"}, [team(m.home, m.home.winner), el("div", {class:"mid"}, mid), team(m.away, m.away.winner)])]);
+  function leagueBlock(l, cards, tv){
+    const logo = l.live ? el("span", {class:"mx-lgl"}, [el("i", {class:"mx-dot"})])
+      : l.logo ? el("span", {class:"mx-lgl"}, [el("img", {src: l.logo, alt:"", loading:"lazy"})])
+      : el("span", {class:"mx-lgl is-blank"}, [svg(CUP_ICON)]);
+    const head = el("div", {class:"mx-lgh"}, [
+      logo,
+      el("div", {class:"mx-lgt"}, [el("h3", {text: l.name}), el("span", {text: games(l.live ? l.count : l.matches.length)})]),
+      tv ? el("a", {class:"mx-tvb", href: tv.web, target:"_blank", rel:"noopener", "data-app": tv.app, "data-label": tv.name, "data-lg": l.slug, "aria-label": "شاهد " + l.name + " على " + tv.name}, [svg(TV_ICON), el("span", {text: tv.name})]) : null
+    ]);
+    return el("section", {class:"mx-lg" + (l.live ? " is-live" : ""), "aria-label": l.name}, [head, l.note ? el("p", {class:"mx-note", text: l.note}) : null, el("div", {class:"fx-grid"}, cards)]);
+  }
+  function fixture(m, l, tv, inLive){
+    const st = m.state, start = Date.parse(m.start), decided = st === "post" && (m.home.winner || m.away.winner);
+    const soon = st === "pre" ? startsIn(start) : "";
+    const team = t => el("div", {class:"fx-tm" + (decided ? (t.winner ? " win" : " lose") : "")}, [
+      el("span", {class:"fx-logo"}, [t.logo ? el("img", {src: t.logo, alt:"", loading:"lazy"}) : null]),
+      el("b", {text: t.name, dir:"auto"}),
+      t.record ? el("small", {text: t.record, dir:"ltr"}) : null
+    ]);
+    let mid, said;
+    if(st === "pre"){
+      mid = [el("span", {class:"fx-kt", text: clock(start)}), soon ? el("span", {class:"fx-st soon", text: soon}) : null];
+      said = m.home.name + " ضد " + m.away.name + "، الساعة " + clock(start) + (soon ? "، " + soon : "");
+    } else if(st === "off"){
+      mid = [el("span", {class:"fx-kt", text:"–"}), el("span", {class:"fx-st", text: m.label})];
+      said = m.home.name + " ضد " + m.away.name + "، " + m.label;
+    } else {
+      const pens = m.home.pens != null && m.away.pens != null;
+      mid = [
+        el("span", {class:"fx-sc"}, [el("span", {text: String(m.home.score)}), el("i", {text:"-"}), el("span", {text: String(m.away.score)})]),
+        pens ? el("span", {class:"fx-pen"}, [el("span", {text:"ترجيح"}), el("span", {text: String(m.home.pens)}), el("span", {text:"-"}), el("span", {text: String(m.away.pens)})]) : null,
+        el("span", {class:"fx-st" + (st === "in" ? " live" : ""), text: m.label})
+      ];
+      said = (st === "in" ? "مباشر، " : "") + m.home.name + " " + m.home.score + "، " + m.away.name + " " + m.away.score + "، " + m.label;
+    }
+    // A league whose rights cover only some matches (NBA) says "maybe" instead of promising the channel.
+    const where = tv ? (l.note ? "قد تكون على " : "على ") + tv.name : "";
+    const b = el("button", {class:"fx is-" + st + (soon ? " is-soon" : ""), type:"button", "data-nav":true, "data-mid": m.id, "aria-label": said + (where ? "، " + where : "")}, [
+      el("div", {class:"fx-in"}, [team(m.home), el("div", {class:"fx-c"}, mid), team(m.away)]),
+      el("div", {class:"fx-ft"}, [tv ? svg(TV_ICON) : null, el("span", {text: where || l.name}), inLive ? el("span", {class:"fx-lgn", text: l.short || l.name}) : null])
+    ]);
     if(tv){ b.dataset.app = tv.app; b.dataset.label = tv.name; b.dataset.web = tv.web; }
     return b;
+  }
+  function emptyDay(){
+    let next = null;
+    for(let off = matchDay + 1; off <= 5 && next === null; off++){ const i = dayInfo[riyadhDate(off)]; if(i && i.count) next = off; }
+    const box = el("div", {class:"mx-empty"}, [
+      svg(CAL_ICON),
+      el("h3", {text: "ما فيه مباريات " + (Math.abs(matchDay) <= 1 ? dayName(matchDay) : "يوم " + dayName(matchDay))}),
+      el("p", {text: "ما عندنا مباريات في الدوريات اللي نتابعها هاليوم. اختر يوم ثاني من فوق."})
+    ]);
+    if(next !== null){
+      const b = el("button", {class:"btn btn-gold", type:"button", "data-nav":true}, [svg(CAL_ICON), el("span", {text: "مباريات " + (next === 1 ? "بكرة" : fullDay(next)) + " (" + games(dayInfo[riyadhDate(next)].count) + ")"})]);
+      b.addEventListener("click", () => viewMatches(next));
+      box.appendChild(b);
+    }
+    return box;
+  }
+  function matchError(){
+    const list = $("#matchList");
+    if(list.querySelector(".mx-empty.is-error")) return;
+    list.textContent = "";
+    const b = el("button", {class:"btn btn-ghost", type:"button", "data-nav":true, text:"حاول مرة ثانية"});
+    b.addEventListener("click", () => viewMatches(matchDay));
+    list.appendChild(el("div", {class:"mx-empty is-error"}, [svg("M12 8v5M12 16v.01M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"), el("h3", {text:"ما قدرنا نجيب المباريات الحين"}), el("p", {text:"تأكد من اتصال الإنترنت. بنحاول مرة ثانية تلقائياً بعد شوي."}), b]));
+  }
+  function skeleton(){
+    const w = el("div", {class:"mx-skel", "aria-hidden":"true"});
+    for(let i = 0; i < 2; i++){
+      w.appendChild(el("div", {class:"sk-h"}));
+      w.appendChild(el("div", {class:"fx-grid"}, [el("div", {class:"sk-fx"}), el("div", {class:"sk-fx"}), el("div", {class:"sk-fx"})]));
+    }
+    return w;
   }
 
   /* ---------- settings ---------- */
@@ -1233,6 +1447,8 @@ footer a{color:var(--muted)}
       if(n === cur) return;
       const b = n.getBoundingClientRect(), x = b.left + b.width/2, y = b.top + b.height/2, dx = x - cx, dy = y - cy;
       let main, cross;
+      // Left and right stay on the same row: at the end of a row the focus stays put instead of jumping elsewhere.
+      if((dir === "left" || dir === "right") && !sameTrack(n) && (b.bottom <= r.top + 4 || b.top >= r.bottom - 4)) return;
       if(dir === "left"){ if(!(b.right <= r.left + 4 || (sameTrack(n) && dx < 0))) return; main = -dx; cross = Math.abs(dy); }
       else if(dir === "right"){ if(!(b.left >= r.right - 4 || (sameTrack(n) && dx > 0))) return; main = dx; cross = Math.abs(dy); }
       else if(dir === "up"){ if(b.bottom > r.top + 4) return; main = -dy; cross = Math.abs(dx); }
@@ -1274,7 +1490,7 @@ footer a{color:var(--muted)}
   $("#homeBtn").addEventListener("click", goHome);
   document.querySelectorAll(".nav [data-go]").forEach(b => b.addEventListener("click", () => {
     const g = b.dataset.go; q.value = "";
-    if(g === "home") viewHome(); else if(g === "movie" || g === "tv") viewType(g); else if(g === "platforms") viewPlatforms(); else if(g === "matches") viewMatches(0); else if(g === "mine") viewMine();
+    if(g === "home") viewHome(); else if(g === "movie" || g === "tv") viewType(g); else if(g === "platforms") viewPlatforms(); else if(g === "matches"){ matchLeague = "all"; viewMatches(0); } else if(g === "mine") viewMine();
   }));
   $("#openSettings").addEventListener("click", openSettings);
   $("#closeSettings").addEventListener("click", closeSettings);

@@ -172,6 +172,8 @@ def transform_css(css):
         if own: return own
         for s in split_top(sel, ","):
             s = s.strip()
+            if s in display:                                    # declared by another rule for the same selector
+                return sorted(display[s])[0]
             base = re.match(r"^(.*?)[.:\[][\w-]+[^.:\[]*$", s)  # .prov.sm -> .prov
             if base and base.group(1) in display:
                 return sorted(display[base.group(1)])[0]

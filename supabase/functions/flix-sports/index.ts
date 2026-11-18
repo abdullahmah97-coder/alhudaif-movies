@@ -1,14 +1,15 @@
 // flix-sports: fixtures and live scores by league for Hudaif Flix (حضيف فليكس).
-// Reads ESPN's public soccer scoreboard (no key; unofficial, so it can change without notice),
+// Reads ESPN's public scoreboards (no key; unofficial, so they can change without notice),
 // keeps only what the app shows, puts league and well-known team names in Arabic, and adds the
 // official broadcaster in Saudi Arabia for each competition. Rights change between seasons:
 // update BROADCASTERS / LEAGUES here and the app follows without a new TV install.
 //
 //   GET .../functions/v1/flix-sports/matches?date=YYYY-MM-DD   a day in Riyadh time (default: today)
+//   GET .../functions/v1/flix-sports/days?from=YYYY-MM-DD&count=7   how many matches each day has
 //
 // Deployed with verify_jwt = false on purpose: public, read-only data for app users with no account.
 
-const ESPN = "https://site.api.espn.com/apis/site/v2/sports/soccer/";
+const ESPN = "https://site.api.espn.com/apis/site/v2/sports/";
 const RIYADH_OFFSET_MS = 3 * 3600_000;
 // ESPN refuses Deno's default user agent, so ask like a browser does.
 const HEADERS = { "User-Agent": "Mozilla/5.0 (compatible; HudaifFlix/1.0)", Accept: "application/json" };
@@ -22,19 +23,26 @@ const BROADCASTERS = {
 } as const;
 type Tv = keyof typeof BROADCASTERS;
 
+type Sport = "soccer" | "basketball";
+type League = { slug: string; sport: Sport; name: string; short: string; tv: Tv; note?: string };
+
 /** Competitions in the order the app lists them. */
-const LEAGUES: { slug: string; name: string; tv: Tv }[] = [
-  { slug: "ksa.1", name: "دوري روشن السعودي", tv: "thmanyah" },
-  { slug: "ksa.kings.cup", name: "كأس خادم الحرمين الشريفين", tv: "thmanyah" },
-  { slug: "afc.champions", name: "دوري أبطال آسيا للنخبة", tv: "bein" },
-  { slug: "uefa.champions", name: "دوري أبطال أوروبا", tv: "bein" },
-  { slug: "eng.1", name: "الدوري الإنجليزي الممتاز", tv: "bein" },
-  { slug: "esp.1", name: "الدوري الإسباني", tv: "bein" },
-  { slug: "ita.1", name: "الدوري الإيطالي", tv: "starzplay" },
-  { slug: "ger.1", name: "الدوري الألماني", tv: "shahid" },
-  { slug: "fra.1", name: "الدوري الفرنسي", tv: "bein" },
-  { slug: "uefa.europa", name: "الدوري الأوروبي", tv: "bein" },
-  { slug: "uefa.europa.conf", name: "دوري المؤتمر الأوروبي", tv: "bein" },
+const LEAGUES: League[] = [
+  { slug: "ksa.1", sport: "soccer", name: "دوري روشن السعودي", short: "روشن", tv: "thmanyah" },
+  { slug: "ksa.kings.cup", sport: "soccer", name: "كأس خادم الحرمين الشريفين", short: "كأس الملك", tv: "thmanyah" },
+  { slug: "afc.champions", sport: "soccer", name: "دوري أبطال آسيا للنخبة", short: "أبطال آسيا", tv: "bein" },
+  { slug: "uefa.champions", sport: "soccer", name: "دوري أبطال أوروبا", short: "أبطال أوروبا", tv: "bein" },
+  { slug: "eng.1", sport: "soccer", name: "الدوري الإنجليزي الممتاز", short: "الإنجليزي", tv: "bein" },
+  { slug: "esp.1", sport: "soccer", name: "الدوري الإسباني", short: "الإسباني", tv: "bein" },
+  { slug: "ita.1", sport: "soccer", name: "الدوري الإيطالي", short: "الإيطالي", tv: "starzplay" },
+  { slug: "ger.1", sport: "soccer", name: "الدوري الألماني", short: "الألماني", tv: "shahid" },
+  { slug: "fra.1", sport: "soccer", name: "الدوري الفرنسي", short: "الفرنسي", tv: "bein" },
+  { slug: "uefa.europa", sport: "soccer", name: "الدوري الأوروبي", short: "الأوروبي", tv: "bein" },
+  { slug: "uefa.europa.conf", sport: "soccer", name: "دوري المؤتمر الأوروبي", short: "المؤتمر", tv: "bein" },
+  {
+    slug: "nba", sport: "basketball", name: "دوري كرة السلة الأمريكي NBA", short: "NBA", tv: "bein",
+    note: "beIN SPORTS تنقل مباريات مختارة كل أسبوع، والباقي على NBA League Pass.",
+  },
 ];
 
 /** Arabic names for well-known clubs, keyed by the ESPN name in lower case letters and digits only. */
@@ -73,6 +81,16 @@ const AR: Record<string, string> = {
   benfica: "بنفيكا", fcporto: "بورتو", porto: "بورتو", sportingcp: "سبورتنغ لشبونة", ajax: "أياكس", afcajax: "أياكس",
   psveindhoven: "آيندهوفن", psv: "آيندهوفن", feyenoord: "فينورد", galatasaray: "غلطة سراي", fenerbahce: "فنربخشة", celtic: "سلتيك",
   clubbrugge: "كلوب بروج",
+  // NBA
+  atlantahawks: "أتلانتا هوكس", bostonceltics: "بوسطن سلتيكس", brooklynnets: "بروكلين نتس", charlottehornets: "شارلوت هورنتس",
+  chicagobulls: "شيكاغو بولز", clevelandcavaliers: "كليفلاند كافالييرز", dallasmavericks: "دالاس مافريكس", denvernuggets: "دنفر ناغتس",
+  detroitpistons: "ديترويت بيستونز", goldenstatewarriors: "غولدن ستيت ووريرز", houstonrockets: "هيوستن روكتس", indianapacers: "إنديانا بيسرز",
+  laclippers: "لوس أنجلوس كليبرز", losangelesclippers: "لوس أنجلوس كليبرز", losangeleslakers: "لوس أنجلوس ليكرز",
+  memphisgrizzlies: "ممفيس غريزليز", miamiheat: "ميامي هيت", milwaukeebucks: "ميلووكي باكس", minnesotatimberwolves: "مينيسوتا تمبروولفز",
+  neworleanspelicans: "نيو أورلينز بيليكانز", newyorkknicks: "نيويورك نيكس", oklahomacitythunder: "أوكلاهوما سيتي ثاندر",
+  orlandomagic: "أورلاندو ماجيك", philadelphia76ers: "فيلادلفيا سفنتي سيكسرز", phoenixsuns: "فينيكس صنز",
+  portlandtrailblazers: "بورتلاند تريل بليزرز", sacramentokings: "ساكرامنتو كينغز", sanantoniospurs: "سان أنطونيو سبيرز",
+  torontoraptors: "تورونتو رابتورز", utahjazz: "يوتا جاز", washingtonwizards: "واشنطن ويزاردز",
   // More of the top five leagues
   ipswichtown: "إبسويتش", leicestercity: "ليستر سيتي", southampton: "ساوثهامبتون", sheffieldunited: "شيفيلد يونايتد",
   middlesbrough: "ميدلزبره", norwichcity: "نوريتش", wolves: "وولفرهامبتون",
@@ -97,12 +115,19 @@ const keyOf = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g
 // deno-lint-ignore no-explicit-any
 type Json = any;
 
-function statusOf(c: Json): { state: string; label: string } {
+function statusOf(c: Json, sport: Sport): { state: string; label: string } {
   const t = c?.status?.type ?? {};
   const name = String(t.name ?? "");
   const short = String(t.shortDetail ?? "");
   if (name === "STATUS_POSTPONED") return { state: "off", label: "تأجلت" };
   if (name === "STATUS_CANCELED" || name === "STATUS_ABANDONED") return { state: "off", label: "ألغيت" };
+  if (sport === "basketball" && t.state === "in" && name !== "STATUS_HALFTIME") {
+    const p = Number(c?.status?.period ?? 0), clock = String(c?.status?.displayClock ?? "");
+    const part = p > 4 ? "وقت إضافي" + (p > 5 ? " " + (p - 4) : "") : "الربع " + (p || 1);
+    if (name === "STATUS_END_PERIOD") return { state: "in", label: "نهاية " + part };
+    return { state: "in", label: clock && clock !== "0.0" ? part + " · " + clock : part };
+  }
+  if (sport === "basketball" && t.state === "post") return { state: "post", label: /OT/i.test(short) ? "انتهت بعد الوقت الإضافي" : "انتهت" };
   if (t.state === "in") {
     if (name === "STATUS_HALFTIME") return { state: "in", label: "استراحة" };
     if (name === "STATUS_SHOOTOUT") return { state: "in", label: "ركلات ترجيح" };
@@ -116,30 +141,48 @@ function statusOf(c: Json): { state: string; label: string } {
   return { state: "pre", label: "" };
 }
 
-function side(x: Json) {
+function side(x: Json, sport: Sport) {
   const team = x?.team ?? {};
   const en = String(team.displayName ?? team.shortDisplayName ?? "");
+  const record = sport === "basketball" ? x?.records?.find?.((r: Json) => r?.type === "total")?.summary ?? x?.records?.[0]?.summary : null;
   return {
     name: AR[keyOf(en)] ?? AR[keyOf(String(team.shortDisplayName ?? ""))] ?? en,
     logo: typeof team.logo === "string" ? team.logo : "",
     score: x?.score ?? "",
     pens: x?.shootoutScore ?? null,
     winner: x?.winner === true,
+    record: typeof record === "string" ? record : null,
   };
 }
 
 const ymd = (d: Date) => d.toISOString().slice(0, 10).replaceAll("-", "");
 const riyadhDay = (iso: string) => new Date(Date.parse(iso) + RIYADH_OFFSET_MS).toISOString().slice(0, 10);
 
-async function espn(slug: string, day: string): Promise<Json[]> {
+/** One ESPN scoreboard day, shared by the Riyadh days that overlap it. Recent days refresh often. */
+const espnCache = new Map<string, { at: number; ttl: number; events: Json[] }>();
+const inflight = new Map<string, Promise<Json[]>>();
+function espn(l: League, day: string): Promise<Json[]> {
+  const key = `${l.slug}/${day}`, hit = espnCache.get(key);
+  if (hit && Date.now() - hit.at < hit.ttl) return Promise.resolve(hit.events);
+  if (!inflight.has(key)) inflight.set(key, fetchDay(l, day, key).finally(() => inflight.delete(key)));
+  return inflight.get(key)!;
+}
+async function fetchDay(l: League, day: string, key: string): Promise<Json[]> {
+  let events: Json[] = [], ok = false;
   try {
-    const r = await fetch(`${ESPN}${slug}/scoreboard?dates=${day}`, { headers: HEADERS, signal: AbortSignal.timeout(8000) });
-    if (!r.ok) return [];
-    const j = await r.json();
-    return Array.isArray(j?.events) ? j.events.map((e: Json) => ({ ...e, _leagueLogo: j?.leagues?.[0]?.logos?.[0]?.href ?? "" })) : [];
+    const r = await fetch(`${ESPN}${l.sport}/${l.slug}/scoreboard?dates=${day}`, { headers: HEADERS, signal: AbortSignal.timeout(8000) });
+    if (r.ok) {
+      const j = await r.json();
+      ok = true;
+      events = Array.isArray(j?.events) ? j.events.map((e: Json) => ({ ...e, _leagueLogo: j?.leagues?.[0]?.logos?.[0]?.href ?? "" })) : [];
+    }
   } catch {
-    return [];
+    // treated as no matches, retried soon
   }
+  const near = Math.abs(Date.parse(day.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3")) - Date.now()) < 2 * 86400_000;
+  if (espnCache.size > 400) espnCache.clear();
+  espnCache.set(key, { at: Date.now(), ttl: !ok ? 20_000 : near ? 30_000 : 600_000, events });
+  return events;
 }
 
 async function matchesFor(date: string) {
@@ -147,7 +190,7 @@ async function matchesFor(date: string) {
   const d = new Date(date + "T12:00:00Z");
   const days = [ymd(new Date(d.getTime() - 86400_000)), ymd(d)];
   const leagues = await Promise.all(LEAGUES.map(async (l) => {
-    const events = (await Promise.all(days.map((day) => espn(l.slug, day)))).flat();
+    const events = (await Promise.all(days.map((day) => espn(l, day)))).flat();
     const seen = new Set<string>();
     let logo = "";
     const matches = events
@@ -158,10 +201,10 @@ async function matchesFor(date: string) {
         const teams = Array.isArray(c.competitors) ? c.competitors : [];
         const home = teams.find((t: Json) => t.homeAway === "home") ?? teams[0];
         const away = teams.find((t: Json) => t.homeAway === "away") ?? teams[1];
-        return { id: String(e.id), start: e.date, ...statusOf(c), home: side(home), away: side(away) };
+        return { id: String(e.id), start: e.date, ...statusOf(c, l.sport), home: side(home, l.sport), away: side(away, l.sport) };
       })
       .sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
-    return { slug: l.slug, name: l.name, tv: l.tv, logo, matches };
+    return { slug: l.slug, sport: l.sport, name: l.name, short: l.short, tv: l.tv, note: l.note ?? null, logo, matches };
   }));
   const shown = leagues.filter((l) => l.matches.length);
   const live = shown.some((l) => l.matches.some((m) => m.state === "in"));
@@ -180,7 +223,20 @@ const reply = (status: number, body: unknown, maxAge = 0) =>
     headers: { ...CORS, "Content-Type": "application/json; charset=utf-8", "Cache-Control": maxAge ? `public, max-age=${maxAge}` : "no-store" },
   });
 
-const cache = new Map<string, { at: number; ttl: number; body: string }>();
+const cache = new Map<string, { at: number; ttl: number; body: string; data: Json }>();
+
+async function day(date: string, today: string) {
+  const hit = cache.get(date);
+  if (hit && Date.now() - hit.at < hit.ttl * 1000) return hit;
+  const data = await matchesFor(date);
+  // An empty day may just be ESPN failing for a moment, so browsers keep it only briefly.
+  const ttl = data.live || !data.leagues.length ? (data.live ? 30 : 60) : date === today ? 60 : date < today ? 1800 : 900;
+  if (cache.size > 60) cache.clear();
+  const entry = { at: Date.now(), ttl, body: JSON.stringify(data), data };
+  cache.set(date, entry);
+  return entry;
+}
+const addDays = (date: string, n: number) => new Date(Date.parse(date + "T12:00:00Z") + n * 86400_000).toISOString().slice(0, 10);
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
@@ -188,21 +244,33 @@ Deno.serve(async (req) => {
   const url = new URL(req.url);
   const path = url.pathname.match(/\/flix-sports(\/[^?]*)?$/)?.[1] ?? "/";
   if (path === "/" || path === "/health") return reply(200, { ok: true });
-  if (path !== "/matches") return reply(404, { error: "not_found" });
 
   const today = riyadhDay(new Date().toISOString());
-  const date = /^\d{4}-\d{2}-\d{2}$/.test(url.searchParams.get("date") ?? "") ? url.searchParams.get("date")! : today;
-  const gap = Math.abs(Date.parse(date) - Date.parse(today)) / 86400_000;
-  if (!(gap <= 30)) return reply(400, { error: "date_out_of_range" });
+  const valid = (d: string | null) => /^\d{4}-\d{2}-\d{2}$/.test(d ?? "") && Math.abs(Date.parse(d!) - Date.parse(today)) / 86400_000 <= 30;
 
-  const hit = cache.get(date);
-  if (hit && Date.now() - hit.at < hit.ttl * 1000) return reply(200, hit.body, hit.ttl);
+  if (path === "/matches") {
+    const date = url.searchParams.get("date") ?? today;
+    if (!valid(date)) return reply(400, { error: "date_out_of_range" });
+    const entry = await day(date, today);
+    return reply(200, entry.body, entry.ttl);
+  }
 
-  const data = await matchesFor(date);
-  // An empty day may just be ESPN failing for a moment, so browsers keep it only briefly.
-  const ttl = data.live || !data.leagues.length ? (data.live ? 30 : 60) : date === today ? 60 : date < today ? 1800 : 900;
-  const body = JSON.stringify(data);
-  if (cache.size > 60) cache.clear();
-  cache.set(date, { at: Date.now(), ttl, body });
-  return reply(200, body, ttl);
+  if (path === "/days") {
+    const from = url.searchParams.get("from") ?? today;
+    const count = Math.min(10, Math.max(1, Number(url.searchParams.get("count")) || 7));
+    if (!valid(from)) return reply(400, { error: "date_out_of_range" });
+    const dates = Array.from({ length: count }, (_, i) => addDays(from, i)).filter((d) => valid(d));
+    const out: Json[] = [];
+    for (let i = 0; i < dates.length; i += 3) { // a few days at a time, to go easy on ESPN
+      const chunk = await Promise.all(dates.slice(i, i + 3).map((d) => day(d, today)));
+      chunk.forEach((e) => out.push({
+        date: e.data.date,
+        count: e.data.leagues.reduce((n: number, l: Json) => n + l.matches.length, 0),
+        live: e.data.live,
+      }));
+    }
+    return reply(200, { days: out }, 60);
+  }
+
+  return reply(404, { error: "not_found" });
 });

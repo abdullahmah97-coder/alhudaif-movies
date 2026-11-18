@@ -291,7 +291,27 @@ var LZString=function(){var r=String.fromCharCode,o="ABCDEFGHIJKLMNOPQRSTUVWXYZa
     }catch(e){}
     return null;
   }
-  var d = read();
+  // compact data (v2): the page knows each office's staff and where they sit; the address carries only their items
+  var ROSTER = {
+    azem: [["R12", "التحصيل والمطالبات", 0], ["R31", "المحاسبة وكشوف الملاك", 2], ["R32", "التقارير والتحليل", -1], ["R23", "العملاء والمعاينات", -1], ["R11", "العقود والتوثيق", 1], ["R13", "الصيانة والمرافق", -1], ["R00", "المدير التنفيذي", -1], ["R14", "خدمة المستأجرين", -1], ["R21", "الإعلانات العقارية", -1]],
+    films: [["post", "مشرف ما بعد الإنتاج", 0], ["writers", "رئيس غرفة الكتّاب", 2], ["asset-manager", "أمين الأصول", -1], ["quality-lead", "وكيل الجودة", -1], ["animator", "المحرّك", 1], ["scriptwriter", "كاتب السيناريو", -1], ["voice-director", "مخرج الأداء الصوتي", -1], ["cinematographer", "مدير التصوير", -1], ["frame-artist", "فنان اللقطات", -1]],
+    tcon: [["gm", "مكتب المدير العام", 0], ["assistant", "مساعد مدير الإدارة", 1], ["sales", "وكيل المبيعات", 2], ["marketing", "وكيل التسويق", 3], ["accountant", "المحاسب", -1], ["legal", "الوكيل القانوني", -1], ["auditor", "المدقق المالي", -1]],
+    app: [["ceo", "مدير المكتب", 0], ["partners", "مدير الشركاء", 1], ["ops", "مدير العمليات", 2], ["community", "مدير المجتمع", 3], ["growth", "مدير النمو", 4], ["eng", "مدير المهندسين", 5]]
+  };
+  var SUBS = { azem: "وكلاء عزم أرك العقارية ودفتر العقود", films: "Alhudaif Films", tcon: "TCON للمقاولات وتأجير المعدات", app: "أرك أب" };
+  function expand(x){
+    if(!x || x.v !== 2) return x;
+    var rank = { w: 0, b: 1, h: 2, i: 3 };
+    var o = ["azem", "films", "tcon", "app"].filter(function(k){ return x.o && x.o[k]; }).map(function(k){
+      var s = x.o[k], it = s.i || {};
+      var a = ROSTER[k].map(function(r){ var v = it[r[0]]; return [r[1], v ? v[0] : "i", v ? v[1] : "", v ? (v[2] || "") : "", r[0], v ? (v[3] || "") : "", r[2]]; });
+      a.sort(function(p, q){ return rank[p[1]] - rank[q[1]]; });
+      return { k: k, s: SUBS[k], c: s.c, f: s.f, a: a, x: s.x, note: s.n };
+    });
+    var m = (x.m || []).map(function(e){ var p = e.p || []; return { o: e.o, p: { n: p[0], r: p[1], k: p[2], cam: [e.o, p[3] || 0], team: p[4], seat: p[5] }, q: e.q, say: e.say, t: e.t, s: e.s, f: e.f, b: e.b, ask: e.ask, g: e.g }; });
+    return { at: x.at, o: o, m: m, focus: x.f };
+  }
+  var d = expand(read());
   if(!d || !d.o){
     d = { o: ["azem", "films", "tcon", "app"].map(function(k){ return { k: k, c: [0, 0, 0], a: HEADS[k].map(function(h, i){ return [h[1], "i", "", "", h[0], "", i < PEOPLE[k].length ? i : -1]; }) }; }),
       m: [{ o: "", p: { n: "السكرتيرة", r: "مكتب الإدارة", cam: ["hq", 1] }, say: "أهلاً أستاذ عبدالله، المكاتب الأربعة حاضرة. اسأل Claude عن أي عقد أو شغلة، وأنادي لك الموظف المسؤول يعرضها هنا.",

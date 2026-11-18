@@ -347,7 +347,7 @@ footer a{color:var(--muted)}
       <button class="btn btn-ghost" id="clearKey" data-nav type="button">امسح</button>
     </div>
     <p class="msg" id="keyMsg" role="status"></p>
-    <p class="hint" id="keyHint">المفتاح ينحفظ في متصفح هالجهاز فقط، وما ينرسل لأي مكان غير TMDB.</p>
+    <p class="hint" id="keyHint">أول مفتاح تحطه ينحفظ في سيرفر حضيف فليكس، وبعدها التطبيق يشتغل على كل الأجهزة بدون مفتاح.</p>
     <div>
       <h3>اشتراكاتي</h3>
       <p class="hint" style="margin-bottom:10px">اختر المنصات اللي مشترك فيها، وتطلع لك صفوفها في الرئيسية، ونعلّم الأعمال اللي تقدر تشوفها بدون دفع زيادة.</p>
@@ -475,6 +475,14 @@ footer a{color:var(--muted)}
     return proxyCheck;
   }
   async function ready(){ return !!apiKey || await checkProxy(); }
+  // Hands a working key to the shared server. The server keeps it only while it has none.
+  async function shareKey(key){
+    try{
+      const r = await fetch(PROXY + "/setup", {method:"POST", body: JSON.stringify({key})});
+      if(!r.ok) return false;
+      proxyOk = true; return true;
+    }catch(e){ return false; }
+  }
   async function tmdb(path, params){
     const own = !!apiKey;
     if(!own && !(await checkProxy())) throw {code:"nokey"};
@@ -1013,8 +1021,16 @@ footer a{color:var(--muted)}
     const prev = apiKey; apiKey = v; msg.className = "msg"; msg.textContent = "نجرّب المفتاح…";
     try{
       await tmdb("/configuration");
-      store.set("ahm_key", v); provCache.clear(); saProviders = [];
-      msg.className = "msg ok"; msg.textContent = "تمام، المفتاح شغّال وانحفظ. اختر اشتراكاتك تحت.";
+      provCache.clear(); saProviders = [];
+      if(!(await checkProxy()) && await shareKey(v)){
+        // The first key becomes the shared server's key: this device and every other one now need none.
+        apiKey = ""; store.del("ahm_key"); $("#keyInput").value = "";
+        keyMode(true);
+        msg.className = "msg ok"; msg.textContent = "تمام! انحفظ في سيرفر حضيف فليكس، والتطبيق الحين يشتغل على كل الأجهزة بدون مفتاح.";
+      }else{
+        store.set("ahm_key", v);
+        msg.className = "msg ok"; msg.textContent = "تمام، المفتاح شغّال وانحفظ. اختر اشتراكاتك تحت.";
+      }
       renderSubs(); subsChanged = true;
     }catch(e){ apiKey = prev; msg.className = "msg err"; msg.textContent = errText(e); }
   }
